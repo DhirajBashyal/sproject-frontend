@@ -1,0 +1,1669 @@
+<title>Social Inbox Frontend Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: fixed section rail beside a reading column; the reference widens to fit paths. */
+:root {
+  --bg: #f5f7f9; --surface: #ffffff; --sunk: #e9eef2; --fg: #17242d; --muted: #566772; --line: #d3dce2;
+  --accent: #0a5fa8; --accent-soft: #e0edf8;
+  --good: #11704a; --good-soft: #dff3ea; --warn: #8a5a00; --warn-soft: #fbf0d4; --bad: #ad2b2b; --bad-soft: #fbe6e4;
+  --code-bg: #eef2f5; --c-key: #0a5fa8; --c-str: #11704a; --c-kw: #8e2f7e; --c-com: #66757f;
+  --brand: #0a5fa8; --brand-soft: #e0edf8; --ai: #1f6fc4; --panel: #f2f2f3;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11181d; --surface: #182229; --sunk: #202d35; --fg: #e5edf2; --muted: #9db0bc; --line: #2f3f49;
+  --accent: #7dbdf5; --accent-soft: #1b3347;
+  --good: #6fd3a8; --good-soft: #17352a; --warn: #e8bf6a; --warn-soft: #3a2e14; --bad: #f29a93; --bad-soft: #421f1d;
+  --code-bg: #0d1317; --c-key: #7dbdf5; --c-str: #6fd3a8; --c-kw: #dc9bd2; --c-com: #8496a1; --brand: #7dbdf5; --brand-soft: #1b3347; --ai: #7dbdf5; --panel: #202d35;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #11181d; --surface: #182229; --sunk: #202d35; --fg: #e5edf2; --muted: #9db0bc; --line: #2f3f49;
+  --accent: #7dbdf5; --accent-soft: #1b3347;
+  --good: #6fd3a8; --good-soft: #17352a; --warn: #e8bf6a; --warn-soft: #3a2e14; --bad: #f29a93; --bad-soft: #421f1d;
+  --code-bg: #0d1317; --c-key: #7dbdf5; --c-str: #6fd3a8; --c-kw: #dc9bd2; --c-com: #8496a1; --brand: #7dbdf5; --brand-soft: #1b3347; --ai: #7dbdf5; --panel: #202d35;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--body); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 48px; max-width: 1180px; margin-inline: auto;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.rail { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 32px; font-size: 14px; }
+.rail b { display: block; font: 700 18px/1.2 var(--display); margin-bottom: 16px; }
+.rail ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rail a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+.rail a:hover { background: var(--sunk); color: var(--fg); }
+main { min-width: 0; padding-block: 32px 96px; }
+section { padding-top: 40px; }
+section + section { margin-top: 40px; border-top: 1px solid var(--line); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; }
+h1 { font-size: clamp(32px, 5vw, 46px); margin: 0 0 12px; font-weight: 700; }
+h2 { font-size: 28px; margin: 0 0 12px; }
+h3 { font-size: 19px; margin: 32px 0 8px; }
+p, li { max-width: 68ch; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; margin: 0 0 14px; }
+li { margin-bottom: 6px; }
+.lede { font-size: 18px; color: var(--muted); }
+code { font: 400 .88em/1.5 var(--mono); }
+:not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.code { position: relative; margin: 0 0 18px; }
+.code pre { margin: 0; padding: 14px 16px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+.code code { font-size: 13px; line-height: 1.6; display: block; width: max-content; min-width: 100%; }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 12px var(--body); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 3px 9px; cursor: pointer; }
+.copy:hover { color: var(--fg); }
+.file { font: 500 13px var(--mono); color: var(--muted); margin: 18px 0 6px; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--c-kw); }
+.hljs-string, .hljs-regexp { color: var(--c-str); }
+.hljs-attr, .hljs-title, .hljs-name, .hljs-type { color: var(--c-key); }
+.hljs-comment { color: var(--c-com); font-style: italic; }
+.table { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--surface); }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-weight: 600; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); background: var(--sunk); white-space: nowrap; }
+.pill { display: inline-block; font: 600 12px/1.5 var(--body); padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+.ready { color: var(--good); background: var(--good-soft); }
+.partial { color: var(--warn); background: var(--warn-soft); }
+.blocked { color: var(--bad); background: var(--bad-soft); }
+.callout { padding: 14px 16px; border-radius: 8px; margin: 0 0 18px; background: var(--warn-soft); }
+.callout p:last-child { margin: 0; }
+.callout.info { background: var(--accent-soft); }
+.gap { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.gap:last-of-type { border-bottom: 0; }
+.gap > span { grid-row: span 3; font: 700 15px var(--mono); color: var(--bad); }
+.gap > span.minor { color: var(--warn); }
+.gap h3 { margin: 0; font-size: 17px; }
+.gap p { margin: 0; }
+.gap .ask { color: var(--muted); font-size: 15px; margin-top: 4px; }
+.steps { counter-reset: s; list-style: none; padding: 0; }
+.steps li { counter-increment: s; position: relative; padding-left: 34px; margin-bottom: 10px; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 23px; height: 23px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 600 12.5px/23px var(--mono); text-align: center; }
+/* inbox wireframe */
+.wire { display: grid; grid-template-columns: 170px 220px minmax(240px, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); font-size: 13.5px; min-width: 660px; }
+.wire-wrap { overflow-x: auto; margin-bottom: 8px; }
+.wire > div { padding: 12px; min-width: 0; }
+.wire > div + div { border-left: 1px solid var(--line); }
+.wire h4 { margin: 0 0 8px; font: 600 12px var(--body); letter-spacing: .04em; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row { padding: 7px 8px; border-radius: 6px; margin-bottom: 3px; }
+.row.on { background: var(--accent-soft); }
+.row small { display: block; color: var(--muted); }
+.msg { padding: 6px 10px; border-radius: 10px; background: var(--sunk); width: fit-content; max-width: 85%; margin-bottom: 6px; }
+.msg.me { margin-left: auto; background: var(--accent-soft); }
+.box { border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; color: var(--muted); margin-top: 10px; display: flex; justify-content: space-between; gap: 8px; }
+.caption { font-size: 13.5px; color: var(--muted); }
+/* reference */
+.search { width: 100%; font: 400 15px var(--body); color: var(--fg); background: var(--surface); padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 4px; }
+.count { font: 400 13px var(--body); color: var(--muted); margin-left: 6px; }
+.ep { border: 1px solid var(--line); border-bottom-width: 0; background: var(--surface); }
+.ep-group h3 + .ep { border-radius: 8px 8px 0 0; }
+.ep:last-child { border-bottom-width: 1px; border-radius: 0 0 8px 8px; }
+.ep summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 9px 12px; cursor: pointer; }
+.ep summary:hover { background: var(--sunk); }
+.m { font: 600 11.5px/1.7 var(--mono); width: 58px; text-align: center; border-radius: 4px; flex: none; }
+.m-get { color: var(--accent); background: var(--accent-soft); }
+.m-post { color: var(--good); background: var(--good-soft); }
+.m-delete { color: var(--bad); background: var(--bad-soft); }
+.p { background: none !important; padding: 0 !important; font-size: 13.5px !important; overflow-wrap: anywhere; min-width: 0; }
+.s { color: var(--muted); font-size: 13.5px; flex: 1 1 200px; min-width: 0; }
+.lock { font: 500 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+.ep-b { padding: 8px 14px 6px; border-top: 1px solid var(--line); font-size: 15px; }
+.k { font-weight: 500; margin-bottom: 8px; }
+.err { font-weight: 400; color: var(--muted); }
+.proposed { border: 1px dashed var(--bad); border-radius: 8px; padding: 14px 16px 2px; margin-bottom: 18px; }
+/* UI screen mockups */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 14px; }
+.node { display: inline-block; padding: 5px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.arr { color: var(--muted); margin-inline: 4px; }
+.branch { display: grid; gap: 8px; }
+.shot { padding-top: 16px; scroll-margin-top: 16px; }
+.states { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.states button { font: 500 13px var(--body); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 11px; cursor: pointer; }
+.states button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+.frame { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--sunk); margin-bottom: 12px; font-size: 14px; }
+.bar { padding: 7px 12px; background: var(--surface); border-bottom: 1px solid var(--line); font: 400 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.center { display: flex; justify-content: center; padding: 24px 12px; }
+.pad { padding: 16px; background: var(--surface); }
+.card { width: 100%; max-width: 360px; display: grid; gap: 12px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.card.inset { max-width: none; background: var(--sunk); }
+.ct { font: 700 18px/1.25 var(--display); }
+.f { display: grid; gap: 4px; min-width: 0; }
+.f label { font-weight: 500; font-size: 13px; }
+.f small, .grow small, .msg small { display: block; color: var(--muted); font-size: 12.5px; }
+.f small.e { color: var(--bad); }
+.in { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); overflow-wrap: anywhere; }
+.in.bad { border-color: var(--bad); }
+.dim { opacity: .6; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; font-weight: 500; font-size: 13.5px; background: var(--surface); white-space: nowrap; }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn.wide { width: 100%; }
+.off { opacity: .55; }
+.sm { font-size: 13px; color: var(--muted); margin: 0; }
+.alert { padding: 8px 11px; border-radius: 6px; background: var(--bad-soft); color: var(--bad); font-size: 13.5px; }
+.note { padding: 8px 11px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); font-size: 13.5px; margin-bottom: 10px; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.tabs span { padding: 6px 2px; color: var(--muted); }
+.tabs .on { color: var(--accent); border-bottom: 2px solid var(--accent); font-weight: 500; }
+.item, .check { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.check { flex-wrap: nowrap; border: 0; padding: 0; }
+.grow { flex: 1 1 140px; min-width: 0; }
+.av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 600; }
+.empty { text-align: center; padding: 28px 12px; }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; margin-bottom: 14px; max-width: 340px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.box-c { width: 18px; height: 18px; flex: none; border: 1px solid var(--muted); border-radius: 4px; display: grid; place-items: center; font-size: 12px; }
+.box-c.on { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.sk { height: 34px; border-radius: 6px; background: var(--sunk); }
+.flush { margin: 0; }
+.flush .wire { border: 0; border-radius: 0; }
+.box .fg { color: var(--fg); }
+.box { align-items: center; }
+.site { display: flex; justify-content: flex-end; padding: 20px 14px; }
+.chat { width: 100%; max-width: 320px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.chat-h { padding: 10px 12px; background: var(--accent); color: var(--surface); font-weight: 600; }
+.chat-b { padding: 12px; min-height: 130px; }
+.chat .box { margin: 0 12px 12px; }
+.faq { display: inline-block; padding: 4px 10px; border: 1px solid var(--accent); border-radius: 99px; color: var(--accent); font-size: 13px; }
+i.n { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 5px; border-radius: 50%; background: var(--fg); color: var(--bg); font: 600 11px/1 var(--mono); vertical-align: 1px; flex: none; }
+/* Product designs: Integrations and Inbox */
+.frame { --accent: var(--brand); --accent-soft: var(--brand-soft); font-family: Manrope, var(--body); }
+.frame .ct { font-family: Manrope, var(--body); }
+.frame svg { width: 16px; height: 16px; flex: none; }
+.integ { padding: 22px; }
+.ct.big { display: block; font-size: 23px; margin-bottom: 4px; }
+.ct.sec { display: block; font-size: 17px; margin: 22px 0 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr)); gap: 14px; }
+.ch { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.ch > b { font-size: 15.5px; margin-top: 10px; font-weight: 600; }
+.ch p { margin: 0 0 14px; font-size: 13.5px; color: var(--muted); flex: 1; }
+.ch-t { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.ch-a { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.ch-a .btn { padding-inline: 6px; }
+.ico { width: 50px; height: 50px; border-radius: 9px; display: grid; place-items: center; color: #ffffff; }
+.frame .ico svg { width: 30px; height: 30px; }
+.ico-w { background: #ffffff; color: #0a5fa8; }
+.ico-ig { background: #ee0a6f; }
+.ico-fb { background: linear-gradient(45deg, #0a5fa8, #1f7bf2 55%, #38bdf8); }
+.ico-wa { background: #1ed760; }
+.act { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border: 1px solid var(--good); border-radius: 99px; color: var(--good); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.act:not(:has(i.n))::before, .act::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--good); order: 0; }
+.sw { display: inline-flex; align-items: center; }
+.tg { width: 32px; height: 18px; border-radius: 99px; background: var(--brand); position: relative; }
+.tg::after { content: ""; position: absolute; right: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); }
+.ib { display: grid; grid-template-columns: 340px minmax(320px, 1fr); min-width: 660px; background: var(--surface); }
+.ib-l { border-right: 1px solid var(--line); padding-bottom: 8px; min-width: 0; }
+.ib-tools { display: flex; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.sort, .tools { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
+.tools { gap: 12px; }
+.ib-all { display: flex; align-items: center; gap: 8px; padding: 16px 16px 10px; font-size: 12.5px; color: var(--muted); }
+.frame .ib-all svg { width: 14px; height: 14px; }
+.cv { display: flex; gap: 12px; margin-inline: 10px; padding: 10px; border-radius: 10px; }
+.cv.on { background: var(--panel); }
+.pic { position: relative; width: 58px; height: 58px; flex: none; border-radius: 50%; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; font-weight: 700; font-size: 16px; }
+.plat { position: absolute; right: -4px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #ffffff; border: 2px solid var(--surface); }
+.frame .plat svg { width: 13px; height: 13px; }
+.ico-fb2 { background: #1877f2; }
+.ico-ig2 { background: #ee0a6f; }
+.cv-b { display: grid; gap: 4px; min-width: 0; flex: 1; align-content: start; font-size: 13px; }
+.cv-h { display: flex; justify-content: space-between; gap: 8px; }
+.cv-h b { font-size: 14.5px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.cv time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.ai { display: inline-flex; align-items: center; gap: 5px; color: var(--ai); font-size: 12.5px; }
+.frame .ai svg { width: 13px; height: 13px; }
+.tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.tag { padding: 0 8px; border-radius: 99px; border: 1px solid; font-size: 11.5px; font-weight: 600; line-height: 1.6; }
+.t-bad { color: var(--bad); background: var(--bad-soft); }
+.t-good { color: var(--good); background: var(--good-soft); }
+.t-more { color: var(--brand); background: var(--brand-soft); border-color: transparent; }
+.sn { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ib-r { display: flex; flex-direction: column; padding: 16px; min-width: 0; }
+.thread { flex: 1; display: grid; align-content: start; gap: 10px; min-height: 280px; }
+.out { display: flex; justify-content: flex-end; align-items: flex-start; gap: 8px; }
+.bub { max-width: 75%; padding: 12px 16px 8px; border-radius: 10px; background: var(--brand); color: var(--surface); font-weight: 500; }
+.bub time { display: block; text-align: right; font-size: 11px; font-weight: 400; margin-top: 6px; }
+.bot { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); color: var(--brand); font-size: 10.5px; }
+.ib-r .alert, .ib-r .note { margin-bottom: 0; }
+@media (max-width: 860px) {
+  .ib { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .ib-l { border-right: 0; border-bottom: 1px solid var(--line); }
+  .thread { min-height: 120px; }
+  .integ { padding: 14px; }
+  .shell { display: block; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .rail { position: static; max-height: none; padding-block: 20px 0; }
+  .rail ul { display: flex; overflow-x: auto; padding-bottom: 6px; }
+  .rail a { white-space: nowrap; background: var(--sunk); }
+  main { padding-top: 8px; }
+}
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Sections">
+  <b>Social Inbox Guide</b>
+  <ul>
+    <li><a href="#status">What you can build</a></li>
+    <li><a href="#gaps">Backend gaps</a></li>
+    <li><a href="#screens">UI screens</a></li>
+    <li><a href="#setup">Project setup</a></li>
+    <li><a href="#react19">React 19 patterns</a></li>
+    <li><a href="#auth">Sign-in and tokens</a></li>
+    <li><a href="#limits">Rate limit</a></li>
+    <li><a href="#channels">Channels</a></li>
+    <li><a href="#inbox">Inbox</a></li>
+    <li><a href="#chatbot">Chatbot</a></li>
+    <li><a href="#objects">Response shapes</a></li>
+    <li><a href="#errors">Error handling</a></li>
+    <li><a href="#reference">API reference</a></li>
+  </ul>
+</nav>
+<main>
+
+<header id="status">
+  <h1>Social Inbox Frontend Guide</h1>
+  <p class="lede">How to build the social media inbox and chatbot features with React 19, using the current backend API. For frontend engineers starting from an empty repository. Includes a <a href="#screens">visual guide to every screen</a> and the API call behind it.</p>
+
+  <div class="table"><table>
+    <thead><tr><th>Feature</th><th>Status</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Sign-in, sessions, logout</td><td><span class="pill ready">Ready</span></td><td>All 5 auth endpoints exist.</td></tr>
+      <tr><td>Connect and manage Facebook, Instagram, WhatsApp</td><td><span class="pill ready">Ready</span></td><td>All 33 channel endpoints exist. The rate limit needs care.</td></tr>
+      <tr><td>Embeddable chat widget</td><td><span class="pill partial">Needs checks</span></td><td>Endpoints exist. Confirm the browser can read <code>x-session-id</code> (<a href="#gap-widget">gap 6</a>).</td></tr>
+      <tr><td>Assign a chatbot to a channel</td><td><span class="pill partial">Partial</span></td><td>Works if you already have a chatbot ID. There is no endpoint to list chatbots (<a href="#gap-chatbots">gap 3</a>).</td></tr>
+      <tr><td>Inbox: reply to a known recipient</td><td><span class="pill partial">Partial</span></td><td>Sending works, but recipient IDs only come from incoming messages.</td></tr>
+      <tr><td>Inbox: conversations, history, new messages</td><td><span class="pill blocked">Blocked</span></td><td>The API has no endpoints for reading messages (<a href="#gap-inbox">gap 1</a>).</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption">Based on <code>FRONTEND_API.md</code> as supplied on 31 October 2026. The backend code was not available, so anything the reference does not state is listed as a question below.</p>
+</header>
+
+<section id="gaps">
+  <h2>Backend gaps to resolve</h2>
+  <p>Raise these with the backend team first. Gaps 1 to 3 change what can ship.</p>
+
+  <div class="gap" id="gap-inbox"><span>1</span><h3>The inbox cannot read messages</h3>
+    <p>The reference has <code>send/text</code> but nothing that lists conversations or messages. Incoming messages go to Meta webhooks on the server, and no route or live stream passes them on to the browser. Recipient IDs also come from incoming messages, so an agent has no way to get one.</p>
+    <p class="ask"><b>Ask:</b> add the read endpoints and a live stream. A <a href="#inbox-contract">proposed contract</a> is below.</p></div>
+  <div class="gap"><span>2</span><h3>5 requests per minute is too low for an inbox</h3>
+    <p>The limit is shared across all endpoints, per IP. Opening the dashboard costs 4 requests (<code>/me</code> and three channel lists), which leaves 1 for that minute. Everyone in one office usually shares an IP, so colleagues use up each other's allowance.</p>
+    <p class="ask"><b>Ask:</b> limit per user, with separate budgets for login and for normal use, and send a <code>Retry-After</code> header on <code>429</code>.</p></div>
+  <div class="gap" id="gap-chatbots"><span>3</span><h3>There is no way to list or manage chatbots</h3>
+    <p>Connect endpoints accept a <code>chatbot_id</code>, but the reference has no route to list chatbots, create them or find a widget's access key. A chatbot picker has nothing to show.</p>
+    <p class="ask"><b>Ask:</b> add <code>GET /api/chatbots</code> at minimum, and say where widget keys come from.</p></div>
+  <div class="gap"><span>4</span><h3>Changing a channel's chatbot means re-entering credentials</h3>
+    <p>The only documented way is to connect again, with an access token or a fresh OAuth flow. The reference also doesn't say how to clear a chatbot back to <code>null</code>.</p>
+    <p class="ask"><b>Ask:</b> add <code>PATCH /api/channels/{platform}/{id}</code> taking <code>{ "chatbot_id": "…" | null }</code>.</p></div>
+  <div class="gap"><span>5</span><h3>The bot and a human agent can both reply</h3>
+    <p>Auto-replies are set per channel. Nothing lets an agent take over a single conversation, so customers could get two answers.</p>
+    <p class="ask"><b>Ask:</b> add a per-conversation handoff setting.</p></div>
+  <div class="gap" id="gap-widget"><span class="minor">6</span><h3>Widget requests cross origins</h3>
+    <p>The widget runs on other people's sites, so the API must allow those origins, the custom headers, and expose <code>x-session-id</code> through <code>Access-Control-Expose-Headers</code>. Without that, the header reads as <code>null</code> and every message starts a new conversation. The question also travels in the URL, so it can end up in access logs and is limited in length.</p>
+    <p class="ask"><b>Ask:</b> confirm the CORS setup, and accept the question in a JSON body.</p></div>
+  <div class="gap"><span class="minor">7</span><h3>Tokens have to be readable by JavaScript</h3>
+    <p>Because tokens are returned in JSON, the app has to store them where any cross-site scripting bug could read them. This guide uses <code>localStorage</code> so tabs can share them.</p>
+    <p class="ask"><b>Ask:</b> consider an <code>HttpOnly</code> cookie for the refresh token. Until then, keep a strict Content Security Policy and never render message content as HTML.</p></div>
+  <div class="gap"><span class="minor">8</span><h3>OAuth redirects always go to production</h3>
+    <p>The redirect pages are fixed to <code>nepaeducation-fronted.vercel.app</code>, so a login started on localhost returns to the deployed site. The <code>state</code> also belongs to the API that issued it.</p>
+    <p class="ask"><b>Ask:</b> make the redirect URI configurable per environment and add the local URL to the Meta app settings.</p></div>
+  <div class="gap" id="gap-design"><span class="minor">9</span><h3>The product designs need more data</h3>
+    <p>The Integrations page has an on/off switch for the chat widget, and the API has no route for it. The inbox shows AI labels, tags and sorting, which the proposed contract now includes. The sample messages also thank people for comments, but the API only documents direct messages.</p>
+    <p class="ask"><b>Ask:</b> add a widget on/off route, and confirm whether comment replies are in scope and whether tags are set by AI or by agents.</p></div>
+</section>
+
+<section id="screens">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-chat" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.8 2 11.5c0 2.3 1.1 4.4 2.9 5.9L4 21l4.2-1.9c1.2.4 2.5.6 3.8.6 5.5 0 10-3.7 10-8.2S17.5 3 12 3zM8 13a1.3 1.3 0 110-2.6A1.3 1.3 0 018 13zm4 0a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6zm4 0a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6z"/></symbol>
+<symbol id="i-ig" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17" cy="7" r="1.2" fill="currentColor"/></symbol>
+<symbol id="i-ms" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5C6.5 2.5 2.5 6.5 2.5 11.7c0 2.8 1.2 5.2 3.1 6.8V22l3.3-1.8c1 .3 2 .4 3.1.4 5.5 0 9.5-4 9.5-8.9s-4-9.2-9.5-9.2zm1 12l-2.5-2.6-4.800 2.600 5.300-5.600 2.600 2.600 4.700-2.600-5.300 5.600z"/></symbol>
+<symbol id="i-wa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 3a9 9 0 00-7.700 13.600L3 21l4.500-1.200A9 9 0 1012 3z"/><path fill="currentColor" d="M8.700 7.500c.3 0 .6 0 .8.500l.7 1.700c.1.300 0 .500-.1.700l-.6.700c.7 1.300 1.800 2.300 3.200 3l.8-.9c.2-.2.400-.3.700-.2l1.700.8c.3.100.5.300.4.700-.2 1.200-1.200 2-2.300 2-3.400-.1-7-3.700-7.100-7 0-1 .6-2 1.800-2z"/></symbol>
+<symbol id="i-fb" viewBox="0 0 24 24"><path fill="currentColor" d="M14 8.500V6.800c0-.8.500-1 1-1h2V2.500h-2.800C11.300 2.500 10 4.500 10 6.600v1.900H7.500V12H10v9.500h4V12h2.700l.4-3.500z"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M10 3l1.800 5.200L17 10l-5.200 1.800L10 17l-1.800-5.200L3 10l5.200-1.800zM18 14l.9 2.100L21 17l-2.100.9L18 20l-.9-2.100L15 17l2.100-.9z"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 5h16l-6 7.500V19l-4-2v-4.500z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 12a7 7 0 107-7H7m0 0l3-3M7 5l3 3"/></symbol>
+<symbol id="i-chat-o" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 5h16v11H9l-5 4z"/></symbol>
+</defs></svg>
+  <h2>UI screens</h2>
+  <p>Every screen the frontend needs, with its main states. Use the buttons above a screen to switch state. Numbered markers match the table under each screen, which shows the API call behind that part of the UI. Names and numbers are sample data. The Integrations and Inbox screens follow your product designs, and the other screens use the same blue styling.</p>
+
+  <h3>How the screens connect</h3>
+  <div class="flow" role="img" aria-label="Flow: Create account leads to Sign in, then Integrations. Integrations leads to Connect Facebook, Instagram or WhatsApp and Channel details. Sign in also leads to Inbox.">
+    <span class="node">Create account</span><span class="arr">→</span><span class="node">Sign in</span><span class="arr">→</span>
+    <span class="branch"><span><span class="node">Integrations</span><span class="arr">→</span><span class="node">Connect a channel</span><span class="arr">/</span><span class="node">Channel details</span></span><span><span class="node">Inbox</span></span></span>
+  </div>
+  <div class="table"><table>
+    <thead><tr><th>Screen</th><th>Route</th><th>Requests on open</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#ui-signin">Sign in</a></td><td><code>/login</code></td><td>0</td><td><span class="pill ready">Ready</span></td></tr>
+      <tr><td><a href="#ui-register">Create account</a></td><td><code>/register</code></td><td>0</td><td><span class="pill ready">Ready</span></td></tr>
+      <tr><td><a href="#ui-channels">Social Media Integrations</a></td><td><code>/channels</code></td><td>3 (one list per platform)</td><td><span class="pill ready">Ready</span></td></tr>
+      <tr><td><a href="#ui-details">Channel details</a></td><td><code>/channels</code> panel</td><td>1 (status)</td><td><span class="pill ready">Ready</span></td></tr>
+      <tr><td><a href="#ui-facebook">Connect Facebook</a></td><td><code>/social-media-integration/facebook</code></td><td>1 (code exchange)</td><td><span class="pill partial">Partial</span></td></tr>
+      <tr><td><a href="#ui-instagram">Connect Instagram</a></td><td><code>/social-media-integration/instagram</code></td><td>1 (connect)</td><td><span class="pill partial">Partial</span></td></tr>
+      <tr><td><a href="#ui-whatsapp">Connect WhatsApp</a></td><td><code>/channels</code> dialog</td><td>0</td><td><span class="pill partial">Partial</span></td></tr>
+      <tr><td><a href="#ui-inbox">Inbox</a></td><td><code>/inbox</code></td><td>Not defined yet</td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td><a href="#ui-widget">Chat widget</a></td><td>Embedded on any site</td><td>1 (config)</td><td><span class="pill partial">Needs checks</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption">Partial on the connect screens means the chatbot picker can't load options until <a href="#gap-chatbots">gap 3</a> is fixed. Connecting without a chatbot works.</p>
+
+  <!-- SIGN IN -->
+  <div class="shot" id="ui-signin">
+    <h3>Sign in <span class="pill ready">Ready</span></h3>
+    <div class="states" role="group" aria-label="Sign in state"><button type="button" data-s="a" aria-pressed="true">Default</button><button type="button" data-s="b" aria-pressed="false">Submitting</button><button type="button" data-s="c" aria-pressed="false">Wrong password</button></div>
+    <div class="frame"><div class="bar"><span>/login</span></div><div class="center">
+      <div class="card" data-p="a"><b class="ct">Sign in</b>
+        <div class="f"><label>Email</label><div class="in">jane@example.com</div></div>
+        <div class="f"><label>Password</label><div class="in">••••••••••</div></div>
+        <div class="btn pri wide"><i class="n">1</i>Sign in</div><p class="sm">New here? <u>Create an account</u></p></div>
+      <div class="card" data-p="b" hidden><b class="ct">Sign in</b>
+        <div class="f"><label>Email</label><div class="in dim">jane@example.com</div></div>
+        <div class="f"><label>Password</label><div class="in dim">••••••••••</div></div>
+        <div class="btn pri wide off"><i class="n">2</i>Signing in…</div></div>
+      <div class="card" data-p="c" hidden><b class="ct">Sign in</b>
+        <div class="f"><label>Email</label><div class="in">jane@example.com</div></div>
+        <div class="f"><label>Password</label><div class="in bad">••••••••••</div></div>
+        <div class="alert"><i class="n">3</i>Invalid email or password</div>
+        <div class="btn pri wide">Sign in</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Sign in button</td><td><code>POST /api/auth/user/login</code></td><td>Save tokens, open <code>/inbox</code></td></tr>
+      <tr><td>2</td><td>Pending button</td><td><code>useFormStatus</code></td><td>Disabled until the request ends</td></tr>
+      <tr><td>3</td><td>Error message</td><td><code>401</code> or <code>403</code></td><td>Show <code>detail</code>. Don't reveal whether the email exists</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="shot" id="ui-register">
+    <h3>Create account <span class="pill ready">Ready</span></h3>
+    <div class="states" role="group" aria-label="Create account state"><button type="button" data-s="a" aria-pressed="true">Default</button><button type="button" data-s="b" aria-pressed="false">Validation errors</button></div>
+    <div class="frame"><div class="bar"><span>/register</span></div><div class="center">
+      <div class="card" data-p="a"><b class="ct">Create your account</b>
+        <div class="f"><label>Name</label><div class="in">Jane Doe</div></div>
+        <div class="f"><label>Email</label><div class="in">jane@example.com</div></div>
+        <div class="f"><label>Password</label><div class="in">••••••••••</div><small>8 to 72 characters</small></div>
+        <div class="btn pri wide"><i class="n">1</i>Create account</div></div>
+      <div class="card" data-p="b" hidden><b class="ct">Create your account</b>
+        <div class="f"><label>Name</label><div class="in">Jane Doe</div></div>
+        <div class="f"><label>Email</label><div class="in bad">jane@example</div><small class="e"><i class="n">2</i>value is not a valid email address</small></div>
+        <div class="f"><label>Password</label><div class="in">••••••••••</div></div>
+        <div class="alert"><i class="n">3</i>This email is already registered. <u>Sign in</u></div>
+        <div class="btn pri wide">Create account</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Create account</td><td><code>POST /api/auth/user/register</code>, then <code>/login</code></td><td>Register doesn't log in, so this uses 2 requests</td></tr>
+      <tr><td>2</td><td>Field message</td><td><code>422</code></td><td>Use <code>ApiError.fieldErrors</code></td></tr>
+      <tr><td>3</td><td>Form message</td><td><code>409</code></td><td>Link to Sign in</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- CHANNELS -->
+  <div class="shot" id="ui-channels">
+    <h3>Social Media Integrations <span class="pill ready">Ready</span></h3>
+    <div class="states" role="group" aria-label="Integrations state"><button type="button" data-s="a" aria-pressed="true">Connected</button><button type="button" data-s="b" aria-pressed="false">Nothing connected</button><button type="button" data-s="c" aria-pressed="false">Manage Messenger</button><button type="button" data-s="d" aria-pressed="false">Rate limited</button></div>
+    <div class="frame"><div class="bar"><span>/channels</span></div><div class="pad integ">
+      <div data-p="a">
+        <b class="ct big">Social Media Integrations</b><p class="sm">Manage your channels here.</p><b class="ct sec">All Channels</b>
+        <div class="cards">
+          <div class="ch"><div class="ch-t"><span class="ico ico-w"><svg><use href="#i-chat"/></svg></span><span class="sw"><i class="n">1</i><span class="tg"></span></span></div><b>Chat Widget</b><p>Add a floating chat window to your website.</p><div class="ch-a"><span class="btn"><i class="n">2</i>Docs</span><span class="btn pri">Manage</span></div></div>
+          <div class="ch"><div class="ch-t"><span class="ico ico-ig"><svg><use href="#i-ig"/></svg></span><span class="act"><i class="n">3</i>Active</span></div><b>Instagram</b><p>Connect your agent to an Instagram page and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri"><i class="n">4</i>Manage</span></div></div>
+          <div class="ch"><div class="ch-t"><span class="ico ico-fb"><svg><use href="#i-ms"/></svg></span><span class="act">Active</span></div><b>Messenger</b><p>Connect your agent to a Facebook page and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri">Manage</span></div></div>
+          <div class="ch"><div class="ch-t"><span class="ico ico-wa"><svg><use href="#i-wa"/></svg></span></div><b>WhatsApp</b><p>Connect your agent to a WhatsApp number and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri"><i class="n">5</i>Setup</span></div></div>
+        </div>
+      </div>
+      <div data-p="b" hidden>
+        <b class="ct big">Social Media Integrations</b><p class="sm">Manage your channels here.</p><b class="ct sec">All Channels</b>
+        <div class="cards">
+          <div class="ch"><div class="ch-t"><span class="ico ico-ig"><svg><use href="#i-ig"/></svg></span></div><b>Instagram</b><p>Connect your agent to an Instagram page and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri">Setup</span></div></div>
+          <div class="ch"><div class="ch-t"><span class="ico ico-fb"><svg><use href="#i-ms"/></svg></span></div><b>Messenger</b><p>Connect your agent to a Facebook page and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri">Setup</span></div></div>
+          <div class="ch"><div class="ch-t"><span class="ico ico-wa"><svg><use href="#i-wa"/></svg></span></div><b>WhatsApp</b><p>Connect your agent to a WhatsApp number and respond to messages.</p><div class="ch-a"><span class="btn">Docs</span><span class="btn pri">Setup</span></div></div>
+        </div>
+      </div>
+      <div data-p="c" hidden>
+        <p class="sm"><u>All Channels</u> / Messenger</p>
+        <div class="head"><b class="ct big">Messenger</b><span class="btn pri">Connect another page</span></div>
+        <div class="item"><span class="av">M</span><span class="grow"><b>My Page</b><small>Education · Chatbot: Admissions bot</small></span><span class="act">Active</span><span class="btn"><i class="n">6</i>Manage</span></div>
+        <div class="item"><span class="av">S</span><span class="grow"><b>Sample School</b><small>Education · Auto-replies off</small></span><span class="pill partial">Disconnected</span><span class="btn">Manage</span></div>
+      </div>
+      <div data-p="d" hidden><b class="ct big">Social Media Integrations</b><p class="sm">Manage your channels here.</p><div class="alert"><i class="n">7</i>Too many requests. Wait a minute and try again.</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Widget on/off switch</td><td><span class="pill blocked">No endpoint</span></td><td>See <a href="#gap-design">gap 9</a></td></tr>
+      <tr><td>2</td><td>Docs</td><td>None</td><td>Links to your setup help for that platform</td></tr>
+      <tr><td>3</td><td>Active badge</td><td><code>GET /api/channels/{platform}</code> × 3</td><td>Show it when any channel has <code>is_active: true</code>. Cache the result</td></tr>
+      <tr><td>4</td><td>Manage</td><td>Uses the cached list</td><td>Opens that platform's channels (the Manage Messenger state)</td></tr>
+      <tr><td>5</td><td>Setup</td><td><code>GET /facebook/oauth/url</code>, <code>GET /instagram/oauth-config</code>, or none for WhatsApp</td><td>Redirect to Meta, or open the WhatsApp form</td></tr>
+      <tr><td>6</td><td>Manage a channel</td><td>Opens <a href="#ui-details">Channel details</a></td><td>No request until the panel opens</td></tr>
+      <tr><td>7</td><td>Rate limit message</td><td><code>429</code></td><td>Don't retry automatically</td></tr>
+    </tbody></table></div>
+    <p class="caption">Messenger is the user-facing name for the API's <code>facebook</code> channels. A platform can have several channels, so Manage opens a list, not a single channel. The card design costs 3 list requests on open, which is 4 of the 5 allowed per minute once <code>/me</code> is included.</p>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="shot" id="ui-details">
+    <h3>Channel details <span class="pill ready">Ready</span></h3>
+    <div class="states" role="group" aria-label="Channel details state"><button type="button" data-s="a" aria-pressed="true">Healthy</button><button type="button" data-s="b" aria-pressed="false">Token problem</button><button type="button" data-s="c" aria-pressed="false">Disconnected</button><button type="button" data-s="d" aria-pressed="false">Confirm remove</button></div>
+    <div class="frame"><div class="bar"><span>/channels · My Page</span></div><div class="pad">
+      <div class="head"><span class="grow"><b class="ct">My Page</b><small>Facebook · Page ID 104857392011</small></span></div>
+      <div data-p="a">
+        <div class="kv"><span><i class="n">1</i>Connection</span><span class="pill ready">Working</span><span>Messages</span><span class="pill ready">Receiving</span><span>Followers <i class="n">2</i></span><span>12,480</span></div>
+        <div class="acts"><span class="btn">Change token</span><span class="btn"><i class="n">3</i>Disconnect</span><span class="btn danger"><i class="n">4</i>Remove</span></div>
+      </div>
+      <div data-p="b" hidden>
+        <div class="alert"><i class="n">5</i>This connection needs updating. Meta says: the access token has expired.</div>
+        <div class="f"><label>New page access token</label><div class="in">••••••••••</div></div>
+        <div class="acts"><span class="btn pri"><i class="n">6</i>Update token</span><span class="btn">Connect with Facebook</span></div>
+      </div>
+      <div data-p="c" hidden>
+        <div class="note">Disconnected. Auto-replies and sending are off.</div>
+        <div class="acts"><span class="btn pri"><i class="n">7</i>Reconnect</span><span class="btn danger">Remove</span></div>
+      </div>
+      <div data-p="d" hidden><div class="card inset"><b>Remove My Page?</b><p class="sm">This deletes the channel. To use it again, you'll need to connect it again. Disconnect keeps it listed so you can reconnect later.</p><div class="acts"><span class="btn">Cancel</span><span class="btn">Disconnect instead</span><span class="btn danger">Remove</span></div></div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Health badges</td><td><code>GET /{id}/status</code></td><td><code>token_valid</code> and <code>webhook_subscribed</code></td></tr>
+      <tr><td>2</td><td>Profile data</td><td><code>GET /{id}/details</code></td><td>Optional. Load on request to save rate limit</td></tr>
+      <tr><td>3</td><td>Disconnect</td><td><code>DELETE /{id}</code></td><td><code>is_active: false</code></td></tr>
+      <tr><td>4</td><td>Remove</td><td><code>DELETE /{id}/remove</code></td><td><code>204</code>. Confirm first, using a dialog in the app</td></tr>
+      <tr><td>5</td><td>Reason</td><td><code>error</code> from status</td><td>Shown when <code>token_valid: false</code></td></tr>
+      <tr><td>6</td><td>Update token</td><td><code>POST /{platform}/token</code></td><td>Returns the updated channel</td></tr>
+      <tr><td>7</td><td>Reconnect</td><td><code>POST /{id}/reconnect</code></td><td>On <code>400</code>, ask for a new token</td></tr>
+    </tbody></table></div>
+    <p class="caption">Instagram adds a token expiry warning from <code>token_expires_at</code>. WhatsApp adds the display number and quality rating from <code>config</code>.</p>
+  </div>
+
+  <!-- FACEBOOK -->
+  <div class="shot" id="ui-facebook">
+    <h3>Connect Facebook <span class="pill partial">Partial</span></h3>
+    <div class="states" role="group" aria-label="Connect Facebook state"><button type="button" data-s="a" aria-pressed="true">Pick pages</button><button type="button" data-s="b" aria-pressed="false">Loading</button><button type="button" data-s="c" aria-pressed="false">Link expired</button></div>
+    <div class="frame"><div class="bar"><span>/social-media-integration/facebook?code=…&amp;state=…</span></div><div class="center">
+      <div class="card" data-p="a"><b class="ct">Choose pages to connect</b>
+        <div class="check"><span class="box-c on">✓</span><span class="grow"><i class="n">1</i>My Page<small>Education</small></span></div>
+        <div class="check"><span class="box-c"></span><span class="grow">Sample School<small>Education · Already connected</small></span></div>
+        <div class="f"><label><i class="n">2</i>Chatbot for auto-replies (optional)</label><div class="in dim">No chatbots available</div></div>
+        <div class="btn pri wide"><i class="n">3</i>Connect selected pages</div></div>
+      <div class="card" data-p="b" hidden><b class="ct">Loading your pages…</b><div class="sk"></div><div class="sk"></div></div>
+      <div class="card" data-p="c" hidden><b class="ct">This link expired</b><div class="alert"><i class="n">4</i>Invalid or expired OAuth state</div><div class="btn pri wide">Start again</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Page list</td><td><code>POST /facebook/oauth/callback</code></td><td>Runs once on arrival. Show <code>connected</code> pages too</td></tr>
+      <tr><td>2</td><td>Chatbot picker</td><td><span class="pill blocked">No list endpoint</span></td><td>See <a href="#gap-chatbots">gap 3</a></td></tr>
+      <tr><td>3</td><td>Connect</td><td><code>POST /facebook/pages/connect</code></td><td>Within 10 minutes. <code>409</code> if another user has connected the page</td></tr>
+      <tr><td>4</td><td>Restart</td><td><code>400</code></td><td>Get a new URL with <code>GET /facebook/oauth/url</code></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- INSTAGRAM -->
+  <div class="shot" id="ui-instagram">
+    <h3>Connect Instagram <span class="pill partial">Partial</span></h3>
+    <div class="states" role="group" aria-label="Connect Instagram state"><button type="button" data-s="a" aria-pressed="true">Connecting</button><button type="button" data-s="b" aria-pressed="false">Connected</button><button type="button" data-s="c" aria-pressed="false">Taken</button></div>
+    <div class="frame"><div class="bar"><span>/social-media-integration/instagram?code=…&amp;state=…</span></div><div class="center">
+      <div class="card" data-p="a"><b class="ct"><i class="n">1</i>Connecting your Instagram account…</b><div class="sk"></div></div>
+      <div class="card" data-p="b" hidden><b class="ct">@myschool is connected</b><p class="sm"><i class="n">2</i>The connection lasts about 60 days. We'll warn you before it expires.</p><div class="btn pri wide">Go to Channels</div></div>
+      <div class="card" data-p="c" hidden><b class="ct">Couldn't connect</b><div class="alert"><i class="n">3</i>This Instagram account is connected by another user.</div><div class="btn wide">Back to Channels</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Automatic connect</td><td><code>POST /instagram/connect</code></td><td>Strip <code>#_</code> from <code>code</code>. Run once, like the Facebook exchange</td></tr>
+      <tr><td>2</td><td>Expiry note</td><td><code>token_expires_at</code></td><td>Format the date from the response</td></tr>
+      <tr><td>3</td><td>Error</td><td><code>409</code> or <code>400</code></td><td>Show <code>detail</code></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- WHATSAPP -->
+  <div class="shot" id="ui-whatsapp">
+    <h3>Connect WhatsApp <span class="pill partial">Partial</span></h3>
+    <div class="states" role="group" aria-label="Connect WhatsApp state"><button type="button" data-s="a" aria-pressed="true">Form</button><button type="button" data-s="b" aria-pressed="false">Rejected</button></div>
+    <div class="frame"><div class="bar"><span>/channels · Connect WhatsApp</span></div><div class="center">
+      <div class="card" data-p="a"><b class="ct">Connect a WhatsApp number</b>
+        <div class="f"><label>Phone number ID</label><div class="in">109876543210987</div></div>
+        <div class="f"><label>WhatsApp Business Account ID</label><div class="in">102345678901234</div><small><i class="n">1</i>Needed to receive messages</small></div>
+        <div class="f"><label>Access token</label><div class="in">••••••••••</div><small><i class="n">2</i>Use a permanent System User token</small></div>
+        <div class="btn pri wide"><i class="n">3</i>Connect number</div></div>
+      <div class="card" data-p="b" hidden><b class="ct">Connect a WhatsApp number</b>
+        <div class="f"><label>Phone number ID</label><div class="in bad">109876543210987</div></div>
+        <div class="alert"><i class="n">4</i>Meta rejected this token or phone number ID. Check both in WhatsApp Manager.</div>
+        <div class="btn pri wide">Connect number</div></div>
+    </div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Account ID</td><td><code>waba_id</code></td><td>Optional in the API, but without it messages aren't subscribed</td></tr>
+      <tr><td>2</td><td>Token field</td><td><code>access_token</code></td><td>Write-only. Temporary tokens expire in 24 hours</td></tr>
+      <tr><td>3</td><td>Connect</td><td><code>POST /whatsapp/connect</code></td><td><code>201</code> with the channel</td></tr>
+      <tr><td>4</td><td>Error</td><td><code>400</code> or <code>409</code></td><td>Show <code>detail</code> if it's clearer than this text</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- INBOX -->
+  <div class="shot" id="ui-inbox">
+    <h3>Inbox <span class="pill blocked">Blocked</span></h3>
+    <div class="states" role="group" aria-label="Inbox state"><button type="button" data-s="a" aria-pressed="true">Conversation</button><button type="button" data-s="b" aria-pressed="false">Sending</button><button type="button" data-s="c" aria-pressed="false">Send failed</button><button type="button" data-s="d" aria-pressed="false">Channel disconnected</button></div>
+    <div class="frame"><div class="bar"><span>/inbox</span></div><div class="wire-wrap flush"><div class="ib">
+      <div class="ib-l">
+        <div class="ib-tools"><span class="sort"><i class="n">1</i>Newest <svg><use href="#i-down"/></svg></span><span class="tools"><svg aria-label="Filter"><use href="#i-filter"/></svg><svg aria-label="Refresh"><use href="#i-refresh"/></svg></span></div>
+        <div class="ib-all"><svg><use href="#i-chat-o"/></svg>All Conversation</div>
+        <div class="cv on"><span class="pic">SC<span class="plat ico-fb2"><svg><use href="#i-fb"/></svg></span></span><span class="cv-b"><span class="cv-h"><b><i class="n">2</i>Sample Customer</b><time>09:33 PM</time></span><span class="ai"><svg><use href="#i-spark"/></svg><i class="n">3</i>AI Assistance</span><span class="sn">Thanks for your comment</span></span></div>
+        <div class="cv"><span class="pic">SA<span class="plat ico-fb2"><svg><use href="#i-fb"/></svg></span></span><span class="cv-b"><span class="cv-h"><b>Sample Agent</b><time>05:33 PM</time></span><span class="ai"><svg><use href="#i-spark"/></svg>AI Assistance</span><span class="sn">Hello! How can I help you today?</span></span></div>
+        <div class="cv"><span class="pic">SU<span class="plat ico-ig2"><svg><use href="#i-ig"/></svg></span></span><span class="cv-b"><span class="cv-h"><b>sample_user</b><time>05:18 PM</time></span><span class="ai"><svg><use href="#i-spark"/></svg>AI Assistance</span><span class="sn">hello</span></span></div>
+        <div class="cv"><span class="pic">SL<span class="plat ico-ig2"><svg><use href="#i-ig"/></svg></span></span><span class="cv-b"><span class="cv-h"><b>Sample Lead</b><time>03:32 PM</time></span><span class="ai"><svg><use href="#i-spark"/></svg>AI Assistance</span><span class="tags"><i class="n">4</i><span class="tag t-bad">urgent</span><span class="tag t-good">sponsored</span><span class="tag t-more">+4 more</span></span><span class="sn">Thanks for your comment</span></span></div>
+      </div>
+      <div class="ib-r">
+        <div class="thread">
+          <div class="out"><div class="bub"><i class="n">5</i>Thanks for your comment<time>9:34 PM</time></div><span class="bot"><svg><use href="#i-spark"/></svg></span></div>
+          <div class="out" data-p="b" hidden><div class="bub dim">We're open 9am to 5pm.<time>Sending…</time></div><span class="bot">You</span></div>
+        </div>
+        <div data-p="a"><div class="box"><span>Reply… 0 / 2000</span><span class="btn pri"><i class="n">6</i>Send</span></div></div>
+        <div data-p="b" hidden><div class="box"><span>Reply…</span><span class="btn pri">Send</span></div></div>
+        <div data-p="c" hidden><div class="alert"><i class="n">7</i>Meta rejected this message: it's outside the 24-hour reply window.</div><div class="box"><span class="fg">We're open 9am to 5pm.</span><span class="btn pri">Send</span></div></div>
+        <div data-p="d" hidden><div class="note"><i class="n">8</i>This channel is disconnected. <u>Reconnect</u> to reply.</div><div class="box off"><span>Reply…</span><span class="btn pri off">Send</span></div></div>
+      </div>
+    </div></div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Status</th></tr></thead><tbody>
+      <tr><td>1</td><td>Sort, filter, refresh</td><td><a href="#inbox-contract">Proposed</a> <code>GET /api/conversations</code>. Filter options use the channel lists</td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td>2</td><td>Name, picture, platform badge, time, preview</td><td><a href="#inbox-contract">Proposed</a> <code>contact</code>, <code>channel</code>, <code>last_message</code></td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td>3</td><td>AI Assistance label</td><td><a href="#inbox-contract">Proposed</a> <code>handled_by</code></td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td>4</td><td>Tags, with +N more</td><td><a href="#inbox-contract">Proposed</a> <code>tags</code></td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td>5</td><td>Thread, with a bot or agent marker</td><td><a href="#inbox-contract">Proposed</a> messages route and stream</td><td><span class="pill blocked">Blocked</span></td></tr>
+      <tr><td>6</td><td>Send</td><td><code>POST /api/channels/{platform}/send/text</code></td><td><span class="pill ready">Ready</span></td></tr>
+      <tr><td>7</td><td>Failed send</td><td><code>400</code> with Meta's message</td><td><span class="pill ready">Ready</span>: text returns to the box</td></tr>
+      <tr><td>8</td><td>Disabled composer</td><td><code>is_active: false</code></td><td><span class="pill ready">Ready</span></td></tr>
+    </tbody></table></div>
+    <p class="caption">Your reference image doesn't show a reply box. It's included here because agents need one to reply, and it's the part the API already supports. The character limit follows the channel: Facebook 2000, Instagram 1000, WhatsApp 4096.</p>
+  </div>
+
+  <!-- WIDGET -->
+  <div class="shot" id="ui-widget">
+    <h3>Chat widget <span class="pill partial">Needs checks</span></h3>
+    <div class="states" role="group" aria-label="Chat widget state"><button type="button" data-s="a" aria-pressed="true">First open</button><button type="button" data-s="b" aria-pressed="false">Conversation</button><button type="button" data-s="c" aria-pressed="false">Waiting</button><button type="button" data-s="d" aria-pressed="false">Rate limited</button></div>
+    <div class="frame"><div class="bar"><span>Any website with the widget embedded</span></div><div class="site"><div class="chat">
+      <div class="chat-h"><i class="n">1</i>Chat with us</div>
+      <div class="chat-b" data-p="a"><div class="msg">Hi! How can I help?</div><span class="faq"><i class="n">2</i>What are your opening hours?</span></div>
+      <div class="chat-b" data-p="b" hidden><div class="msg me">What are your opening hours?</div><div class="msg"><i class="n">4</i>We're open 9am to 5pm, Monday to Friday.</div></div>
+      <div class="chat-b" data-p="c" hidden><div class="msg me dim">What are your opening hours?</div><div class="msg dim">Typing…</div></div>
+      <div class="chat-b" data-p="d" hidden><div class="msg me">What are your opening hours?</div><div class="alert"><i class="n">5</i>That didn't send. Please try again in a minute.</div></div>
+      <div class="box"><span>Your question</span><span class="btn pri"><i class="n">3</i>Send</span></div>
+    </div></div></div>
+    <div class="table"><table><thead><tr><th>#</th><th>UI</th><th>API</th><th>Result</th></tr></thead><tbody>
+      <tr><td>1</td><td>Colors and greeting</td><td><code>GET /api/public/chat/config</code></td><td>Apply alignment and bubble colors</td></tr>
+      <tr><td>2</td><td>FAQ shortcuts</td><td><code>faqs</code> from config</td><td>Sends the text as a question</td></tr>
+      <tr><td>3</td><td>Send</td><td><code>POST /api/public/chat?query=…</code></td><td>Save <code>x-session-id</code></td></tr>
+      <tr><td>4</td><td>Answer</td><td><code>answer</code>, <code>history</code></td><td>Plain text. Never show <code>context</code></td></tr>
+      <tr><td>5</td><td>Error</td><td><code>429</code></td><td>Keep the typed question</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<section id="setup">
+  <h2>Project setup</h2>
+  <p>This stack is a single-page app, because the dashboard sits behind a login and the API is a separate service. Versions were checked on npm on 31 October 2026, and the code on this page typechecks against them.</p>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-bash">npm create vite@latest . -- --template react-ts
+npm install react@19.3.1 react-dom@19.3.1 react-router@8.5.1 \
+  @tanstack/react-query@5.105.0 react-error-boundary@6.1.6</code></pre></div>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-bash"># .env.local
+VITE_API_BASE_URL=http://127.0.0.1:8080</code></pre></div>
+  <div class="table"><table>
+    <thead><tr><th>Choice</th><th>Version</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>React and React DOM</td><td>19.3.1</td><td>Actions, <code>use</code>, and <code>useOptimistic</code> cover forms and sending.</td></tr>
+      <tr><td>Vite with TypeScript</td><td>8.3.5 / 7.0.2</td><td>Fast dev server and static build for Vercel.</td></tr>
+      <tr><td>React Router</td><td>8.5.1</td><td>Routing and code splitting. The OAuth pages need exact paths.</td></tr>
+      <tr><td>TanStack Query</td><td>5.105.0</td><td>A shared cache stops components repeating requests and using up the rate limit.</td></tr>
+    </tbody>
+  </table></div>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-text">src/
+  App.tsx                 routes and providers
+  lib/
+    api.ts                fetch wrapper, errors, token refresh
+    session.ts            token storage shared across tabs
+    queryClient.ts        cache defaults for the rate limit
+    types.ts              API response types
+  features/
+    auth/                 login, register
+    channels/             connect flows, channel list, status
+    inbox/                conversation list, thread, composer
+    widget/               embeddable chat widget (separate entry point)</code></pre></div>
+  <p class="file">src/App.tsx</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import { RouterProvider } from "react-router/dom";
+import { LoginForm } from "./features/auth/LoginForm";
+import { FacebookCallback } from "./features/channels/FacebookCallback";
+import { queryClient } from "./lib/queryClient";
+import { useIsSignedIn } from "./lib/session";
+
+function RequireSession() {
+  return useIsSignedIn() ? &lt;Outlet /&gt; : &lt;Navigate to="/login" replace /&gt;;
+}
+
+const router = createBrowserRouter([
+  { path: "/login", Component: LoginForm },
+  {
+    Component: RequireSession,
+    children: [
+      { path: "/inbox", lazy: () =&gt; import("./routes/inbox") },
+      { path: "/channels", lazy: () =&gt; import("./routes/channels") },
+      // These two paths are the OAuth redirect URIs. Do not rename them.
+      { path: "/social-media-integration/facebook", Component: FacebookCallback },
+      { path: "/social-media-integration/instagram", lazy: () =&gt; import("./routes/instagram-callback") },
+    ],
+  },
+]);
+
+createRoot(document.getElementById("root")!).render(
+  &lt;StrictMode&gt;
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;RouterProvider router={router} /&gt;
+    &lt;/QueryClientProvider&gt;
+  &lt;/StrictMode&gt;,
+);</code></pre></div>
+  <div class="callout"><p>The paths <code>/social-media-integration/facebook</code> and <code>/social-media-integration/instagram</code> are the registered OAuth redirect pages. Renaming a route breaks connecting.</p></div>
+</section>
+
+<section id="react19">
+  <h2>React 19 patterns used here</h2>
+  <div class="table"><table>
+    <thead><tr><th>Feature</th><th>Use it for</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>&lt;form action&gt;</code></td><td>Every form. Replaces <code>onSubmit</code> and <code>preventDefault</code>.</td><td><a href="#auth-login">Login</a></td></tr>
+      <tr><td><code>useActionState</code></td><td>Form result and API errors.</td><td><a href="#auth-login">Login</a></td></tr>
+      <tr><td><code>useFormStatus</code></td><td>Disabling a submit button from a child component.</td><td><a href="#auth-login">Login</a></td></tr>
+      <tr><td><code>useOptimistic</code></td><td>Showing a message right away while it sends.</td><td><a href="#inbox-composer">Composer</a>, <a href="#widget-code">widget</a></td></tr>
+      <tr><td><code>use(promise)</code></td><td>One-time reads with Suspense, like the OAuth exchange.</td><td><a href="#fb-callback">Facebook callback</a></td></tr>
+      <tr><td><code>&lt;title&gt;</code> in components</td><td>Page titles, without a helper library.</td><td><a href="#auth-login">Login</a></td></tr>
+      <tr><td><code>ref</code> as a prop</td><td>Shared inputs. <code>forwardRef</code> is no longer needed.</td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Use TanStack Query for data you read again</b>, such as channel lists. Use <code>use()</code> only for a promise you keep stable outside the component. A promise created during render makes the component suspend forever.</p>
+  <p><b>Keep <code>StrictMode</code> on, and be careful with single-use values.</b> In development it runs effects twice, so a callback in <code>useEffect</code> would spend the OAuth <code>state</code> on the first call and show an error from the second.</p>
+  <p><b>React resets uncontrolled forms after an action finishes.</b> Where a failed send must keep the text, hold it in state, as the composer does.</p>
+</section>
+
+<section id="auth">
+  <h2>Sign-in and tokens</h2>
+  <div class="table"><table>
+    <thead><tr><th>Token</th><th>Lifetime</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>access_token</code></td><td>15 minutes (<code>expires_in</code> is in seconds)</td><td><code>Authorization: Bearer …</code> on protected requests</td></tr>
+      <tr><td><code>refresh_token</code></td><td>7 days, single use</td><td>Gets a new pair from <code>/refresh</code></td></tr>
+    </tbody>
+  </table></div>
+  <ol class="steps">
+    <li>A protected request returns <code>401</code>.</li>
+    <li>Call <code>/refresh</code> once with the stored refresh token, and save both new tokens.</li>
+    <li>Retry the original request.</li>
+    <li>If <code>/refresh</code> also returns <code>401</code>, clear the tokens and go to login.</li>
+  </ol>
+  <p>Each refresh token works once, so two tabs refreshing together would log the user out. The client below prevents that with the Web Locks API. Tests confirmed that parallel <code>401</code>s produce one refresh, that a token already refreshed by another tab is reused, and that a login <code>401</code> never triggers a refresh. Those tests used a simulated lock, not two real browser tabs.</p>
+  <p class="file">src/lib/session.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { useSyncExternalStore } from "react";
+import type { TokenPair } from "./types";
+
+const KEY = "auth";
+const listeners = new Set&lt;() =&gt; void&gt;();
+
+function emit() {
+  listeners.forEach((listener) =&gt; listener());
+}
+
+export function readTokens(): TokenPair | null {
+  const raw = localStorage.getItem(KEY);
+  return raw ? (JSON.parse(raw) as TokenPair) : null;
+}
+
+export function saveTokens(tokens: TokenPair | null) {
+  if (tokens) localStorage.setItem(KEY, JSON.stringify(tokens));
+  else localStorage.removeItem(KEY);
+  emit();
+}
+
+// `storage` fires in the other tabs, so logging out in one logs out all of them.
+function subscribe(listener: () =&gt; void) {
+  listeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () =&gt; {
+    listeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+export function useIsSignedIn() {
+  return useSyncExternalStore(subscribe, () =&gt; localStorage.getItem(KEY) !== null);
+}</code></pre></div>
+  <p class="file">src/lib/api.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { readTokens, saveTokens } from "./session";
+import type { TokenPair } from "./types";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+interface ValidationIssue {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly detail: string,
+    readonly issues: ValidationIssue[] = [],
+  ) {
+    super(detail);
+  }
+
+  /** Maps a 422 to { email: "value is not a valid email address" }. */
+  get fieldErrors(): Record&lt;string, string&gt; {
+    return Object.fromEntries(
+      this.issues.map((issue) =&gt; [String(issue.loc.at(-1)), issue.msg]),
+    );
+  }
+}
+
+async function toApiError(response: Response) {
+  const body = await response.json().catch(() =&gt; null);
+  const detail: unknown = body?.detail;
+  if (Array.isArray(detail)) {
+    return new ApiError(response.status, "Check the highlighted fields.", detail);
+  }
+  return new ApiError(
+    response.status,
+    typeof detail === "string" ? detail : `Request failed (${response.status})`,
+  );
+}
+
+let refreshing: Promise&lt;string&gt; | null = null;
+
+/**
+ * Refresh tokens work once, so one refresh runs at a time across all tabs:
+ * `refreshing` joins callers in this tab, the Web Lock queues the other tabs.
+ */
+function refreshAccessToken(rejectedToken: string) {
+  refreshing ??= navigator.locks
+    .request("auth-refresh", async () =&gt; {
+      const stored = readTokens();
+      if (!stored) throw new ApiError(401, "Signed out");
+
+      // Another tab refreshed while this one waited for the lock.
+      if (stored.access_token !== rejectedToken) return stored.access_token;
+
+      const response = await fetch(`${BASE_URL}/api/auth/user/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: stored.refresh_token }),
+      });
+      if (response.status === 401) saveTokens(null);
+      if (!response.ok) throw await toApiError(response);
+
+      const next = (await response.json()) as TokenPair;
+      saveTokens(next);
+      return next.access_token;
+    })
+    .finally(() =&gt; {
+      refreshing = null;
+    });
+  return refreshing;
+}
+
+interface ApiOptions {
+  method?: "GET" | "POST" | "DELETE";
+  body?: unknown;
+  auth?: boolean; // false for login, register and the like
+  signal?: AbortSignal;
+}
+
+export async function api&lt;T&gt;(path: string, options: ApiOptions = {}): Promise&lt;T&gt; {
+  const { method = "GET", body, auth = true, signal } = options;
+
+  const send = (token?: string) =&gt;
+    fetch(`${BASE_URL}${path}`, {
+      method,
+      signal,
+      headers: {
+        ...(body !== undefined &amp;&amp; { "Content-Type": "application/json" }),
+        ...(token &amp;&amp; { Authorization: `Bearer ${token}` }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+  const token = auth ? readTokens()?.access_token : undefined;
+  let response = await send(token);
+
+  if (response.status === 401 &amp;&amp; token) {
+    response = await send(await refreshAccessToken(token));
+  }
+  if (!response.ok) throw await toApiError(response);
+  return (response.status === 204 ? undefined : await response.json()) as T;
+}</code></pre></div>
+  <h3 id="auth-login">Login form</h3>
+  <p>Register does not log the user in, so call login after it. <code>401</code> uses the same message whether or not the email exists, and <code>403</code> means the account is disabled.</p>
+  <p class="file">src/features/auth/LoginForm.tsx</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+import { useNavigate } from "react-router";
+import { api, ApiError } from "../../lib/api";
+import { saveTokens } from "../../lib/session";
+import type { TokenPair } from "../../lib/types";
+
+interface LoginState {
+  error?: string;
+  fields?: Record&lt;string, string&gt;;
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return &lt;button disabled={pending}&gt;{pending ? "Signing in…" : "Sign in"}&lt;/button&gt;;
+}
+
+export function LoginForm() {
+  const navigate = useNavigate();
+
+  const [state, formAction] = useActionState(
+    async (_previous: LoginState, form: FormData): Promise&lt;LoginState&gt; =&gt; {
+      try {
+        const tokens = await api&lt;TokenPair&gt;("/api/auth/user/login", {
+          method: "POST",
+          auth: false,
+          body: { email: form.get("email"), password: form.get("password") },
+        });
+        saveTokens(tokens);
+        await navigate("/inbox");
+        return {};
+      } catch (error) {
+        if (error instanceof ApiError) {
+          return { error: error.detail, fields: error.fieldErrors };
+        }
+        return { error: "Could not reach the server. Try again." };
+      }
+    },
+    {},
+  );
+
+  return (
+    &lt;form action={formAction}&gt;
+      &lt;title&gt;Sign in&lt;/title&gt;
+      &lt;label htmlFor="email"&gt;Email&lt;/label&gt;
+      &lt;input id="email" name="email" type="email" autoComplete="username" required /&gt;
+      {state.fields?.email &amp;&amp; &lt;p role="alert"&gt;{state.fields.email}&lt;/p&gt;}
+
+      &lt;label htmlFor="password"&gt;Password&lt;/label&gt;
+      &lt;input id="password" name="password" type="password" autoComplete="current-password" required /&gt;
+      {state.fields?.password &amp;&amp; &lt;p role="alert"&gt;{state.fields.password}&lt;/p&gt;}
+
+      {state.error &amp;&amp; &lt;p role="alert"&gt;{state.error}&lt;/p&gt;}
+      &lt;SubmitButton /&gt;
+    &lt;/form&gt;
+  );
+}</code></pre></div>
+</section>
+
+<section id="limits">
+  <h2>Working within the rate limit</h2>
+  <p>All endpoints share <b>5 requests per minute per IP</b>. Going over returns <code>429 { "detail": "Rate limit exceeded" }</code>. Until <a href="#gaps">gap 2</a> is fixed:</p>
+  <ul>
+    <li>Load the three channel lists once for the Integrations cards, then reuse the cache. Don't fetch them again when someone clicks Manage.</li>
+    <li>Never poll. Run <code>/status</code> and <code>/details</code> only when someone opens that channel.</li>
+    <li>Don't retry <code>429</code> automatically. Show "Too many requests. Wait a minute and try again."</li>
+    <li>Reuse the data returned by connect, token and reconnect instead of fetching the list again where you can.</li>
+  </ul>
+  <p class="file">src/lib/queryClient.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { QueryClient } from "@tanstack/react-query";
+import { ApiError } from "./api";
+
+// 5 requests per minute per IP: no background refetching, no retry on 4xx.
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: (count, error) =&gt;
+        count &lt; 1 &amp;&amp; !(error instanceof ApiError &amp;&amp; error.status &lt; 500),
+    },
+  },
+});</code></pre></div>
+</section>
+
+<section id="channels">
+  <h2>Channels</h2>
+  <p>A channel is one connected Facebook page, Instagram account or WhatsApp number. Always use <code>external_id</code> in URLs, not <code>id</code>. Access tokens are never returned, so treat any token input as write-only: use <code>type="password"</code> and <code>autoComplete="off"</code>.</p>
+  <p class="file">src/features/channels/channelApi.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { api } from "../../lib/api";
+import type { Channel, ChannelStatus, Platform, SendTextResponse } from "../../lib/types";
+
+const base = (platform: Platform) =&gt; `/api/channels/${platform}`;
+const id = encodeURIComponent;
+
+export const channelApi = {
+  list: (platform: Platform) =&gt; api&lt;Channel[]&gt;(base(platform)),
+
+  // Live call to Meta. Run it when a channel panel opens, never in a loop.
+  status: (channel: Channel) =&gt;
+    api&lt;ChannelStatus&gt;(`${base(channel.platform)}/${id(channel.external_id)}/status`),
+
+  reconnect: (channel: Channel) =&gt;
+    api&lt;Channel&gt;(`${base(channel.platform)}/${id(channel.external_id)}/reconnect`, {
+      method: "POST",
+    }),
+
+  disconnect: (channel: Channel) =&gt;
+    api&lt;Channel&gt;(`${base(channel.platform)}/${id(channel.external_id)}`, {
+      method: "DELETE",
+    }),
+
+  remove: (channel: Channel) =&gt;
+    api&lt;void&gt;(`${base(channel.platform)}/${id(channel.external_id)}/remove`, {
+      method: "DELETE",
+    }),
+};
+
+// Each platform names its send fields differently and truncates at its own length.
+export const MAX_TEXT: Record&lt;Platform, number&gt; = {
+  facebook: 2000,
+  instagram: 1000,
+  whatsapp: 4096,
+};
+
+export function sendText(channel: Channel, recipient: string, text: string) {
+  const bodies: Record&lt;Platform, object&gt; = {
+    facebook: { page_id: channel.external_id, recipient_id: recipient, text },
+    instagram: { instagram_id: channel.external_id, recipient_id: recipient, text },
+    whatsapp: { phone_number_id: channel.external_id, to: recipient, text },
+  };
+  return api&lt;SendTextResponse&gt;(`${base(channel.platform)}/send/text`, {
+    method: "POST",
+    body: bodies[channel.platform],
+  });
+}</code></pre></div>
+  <p class="file">src/features/channels/useChannels.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { channelApi } from "./channelApi";
+import type { Channel, Platform } from "../../lib/types";
+
+export function useChannels(platform: Platform) {
+  return useQuery({
+    queryKey: ["channels", platform],
+    queryFn: () =&gt; channelApi.list(platform),
+  });
+}
+
+// Pass enabled={panelIsOpen} so the live check only runs when someone looks.
+export function useChannelStatus(channel: Channel, enabled: boolean) {
+  return useQuery({
+    queryKey: ["channel-status", channel.platform, channel.external_id],
+    queryFn: () =&gt; channelApi.status(channel),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useDisconnect() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: channelApi.disconnect,
+    onSuccess: (_updated, channel) =&gt;
+      queryClient.invalidateQueries({ queryKey: ["channels", channel.platform] }),
+  });
+}</code></pre></div>
+
+  <h3>Connect Facebook</h3>
+  <ol class="steps">
+    <li><code>GET /oauth/url</code> returns <code>{ url, state }</code>.</li>
+    <li>Send the browser to <code>url</code> and the user approves.</li>
+    <li>Facebook returns to <code>/social-media-integration/facebook?code=…&amp;state=…</code>.</li>
+    <li><code>POST /oauth/callback</code> with <code>{ code, state }</code> returns the user's pages.</li>
+    <li>The user ticks pages and optionally picks a chatbot.</li>
+    <li><code>POST /pages/connect</code> returns the connected channels.</li>
+  </ol>
+  <p><code>state</code> lasts 10 minutes, works once, and only for the user who requested it. After <code>400 "Invalid or expired OAuth state"</code>, restart from step 1. The page list is kept on the server for 10 minutes, so connect within that time.</p>
+  <p class="file" id="fb-callback">src/features/channels/FacebookCallback.tsx</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { Suspense, use } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { Link, useSearchParams } from "react-router";
+import { api, ApiError } from "../../lib/api";
+import type { FacebookPage } from "../../lib/types";
+
+// `state` works once and StrictMode renders twice, so the request is keyed
+// outside React. Both renders then read the same promise.
+const exchanges = new Map&lt;string, Promise&lt;FacebookPage[]&gt;&gt;();
+
+function exchangeCode(code: string, state: string) {
+  let exchange = exchanges.get(state);
+  if (!exchange) {
+    exchange = api&lt;FacebookPage[]&gt;("/api/channels/facebook/oauth/callback", {
+      method: "POST",
+      body: { code, state },
+    });
+    exchanges.set(state, exchange);
+  }
+  return exchange;
+}
+
+function PagePicker({ code, state }: { code: string; state: string }) {
+  const pages = use(exchangeCode(code, state));
+
+  async function connect(form: FormData) {
+    await api("/api/channels/facebook/pages/connect", {
+      method: "POST",
+      body: { page_ids: form.getAll("page_id") },
+    });
+    window.location.assign("/channels");
+  }
+
+  return (
+    &lt;form action={connect}&gt;
+      {pages.map((page) =&gt; (
+        &lt;label key={page.id}&gt;
+          &lt;input type="checkbox" name="page_id" value={page.id} /&gt;
+          {page.name} {page.connected &amp;&amp; "(already connected)"}
+        &lt;/label&gt;
+      ))}
+      &lt;button&gt;Connect selected pages&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}
+
+export function FacebookCallback() {
+  const [params] = useSearchParams();
+  const code = params.get("code");
+  const state = params.get("state");
+
+  if (!code || !state) return &lt;p&gt;Facebook did not grant access.&lt;/p&gt;;
+
+  return (
+    &lt;ErrorBoundary
+      fallbackRender={({ error }) =&gt; (
+        &lt;p role="alert"&gt;
+          {error instanceof ApiError ? error.detail : "Something went wrong."}{" "}
+          &lt;Link to="/channels"&gt;Start again&lt;/Link&gt;
+        &lt;/p&gt;
+      )}
+    &gt;
+      &lt;Suspense fallback={&lt;p&gt;Loading your pages…&lt;/p&gt;}&gt;
+        &lt;PagePicker code={code} state={state} /&gt;
+      &lt;/Suspense&gt;
+    &lt;/ErrorBoundary&gt;
+  );
+}</code></pre></div>
+
+  <h3>Connect Instagram</h3>
+  <ol class="steps">
+    <li><code>GET /oauth-config</code> returns <code>{ auth_url, state, … }</code>.</li>
+    <li>Send the browser to <code>auth_url</code> and the user approves.</li>
+    <li>Instagram returns to <code>/social-media-integration/instagram?code=…&amp;state=…</code>.</li>
+    <li><code>POST /connect</code> with <code>{ code, state, chatbot_id }</code> returns the channel.</li>
+  </ol>
+  <p>Instagram sometimes appends <code>#_</code> to the redirect URL, so strip it from <code>code</code>. Use the same single-use exchange pattern as Facebook. Instagram tokens last 60 days, so warn when <code>token_expires_at</code> is near. Reconnecting extends it.</p>
+
+  <h3>Connect WhatsApp</h3>
+  <p>There is no OAuth flow. Show a form for the phone number ID, access token and WhatsApp Business Account ID from Meta's WhatsApp Manager. Make the account ID look required: without it, incoming messages aren't subscribed. Tell users to paste a permanent System User token, because temporary dashboard tokens expire in 24 hours.</p>
+
+  <h3>Channel states to design for</h3>
+  <div class="table"><table>
+    <thead><tr><th>What the API returns</th><th>Show</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><code>is_active: false</code></td><td>Disconnected, sending turned off</td><td><code>POST /{id}/reconnect</code></td></tr>
+      <tr><td><code>token_valid: false</code></td><td>Connection needs updating, plus <code>error</code></td><td>Update the token or use OAuth again</td></tr>
+      <tr><td><code>webhook_subscribed: null</code></td><td>Message delivery couldn't be checked</td><td>Fix the token, or add a WhatsApp <code>waba_id</code></td></tr>
+      <tr><td><code>webhook_subscribed: false</code></td><td>Not receiving messages</td><td>Reconnect</td></tr>
+      <tr><td><code>chatbot_id: null</code></td><td>Auto-replies off</td><td>Pick a chatbot</td></tr>
+      <tr><td><code>409</code> on connect</td><td>Connected by another user</td><td>No action in the app</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Disconnect or remove</h3>
+  <div class="table"><table>
+    <thead><tr><th>Action</th><th>Effect</th><th>Undo</th></tr></thead>
+    <tbody>
+      <tr><td><b>Disconnect</b> <code>DELETE /{id}</code></td><td>Stops webhooks and auto-replies. The channel stays listed with <code>is_active: false</code>, and sending returns <code>400</code>.</td><td><code>POST /{id}/reconnect</code></td></tr>
+      <tr><td><b>Remove</b> <code>DELETE /{id}/remove</code></td><td>Deletes the channel.</td><td>Connect again</td></tr>
+    </tbody>
+  </table></div>
+  <p>Ask for confirmation before Remove with a dialog in the app. Offer Disconnect as the safer choice.</p>
+</section>
+
+<section id="inbox">
+  <h2>Inbox</h2>
+  <div class="callout"><p><b>The full inbox can't be built yet.</b> Only the composer below works against today's API. Build the layout and composer now, behind a mock data layer, and connect it when <a href="#gap-inbox">gap 1</a> is resolved.</p></div>
+  <p>See the <a href="#ui-inbox">inbox screen and its states</a> for the layout.</p>
+
+  <h3>Platform rules for the composer</h3>
+  <div class="table"><table>
+    <thead><tr><th>Platform</th><th>ID field</th><th>Recipient field</th><th>Max length that arrives</th></tr></thead>
+    <tbody>
+      <tr><td>Facebook</td><td><code>page_id</code></td><td><code>recipient_id</code> (page-scoped ID)</td><td>2000</td></tr>
+      <tr><td>Instagram</td><td><code>instagram_id</code></td><td><code>recipient_id</code> (Instagram-scoped ID)</td><td>1000</td></tr>
+      <tr><td>WhatsApp</td><td><code>phone_number_id</code></td><td><code>to</code> (digits only)</td><td>4096</td></tr>
+    </tbody>
+  </table></div>
+  <p>The API accepts 4096 characters, but Facebook and Instagram silently cut longer messages, so the composer enforces each platform's limit. Replies can fail outside the 24-hour window. Show Meta's message from <code>detail</code>. On WhatsApp, starting a conversation needs a template, which the API doesn't support yet.</p>
+  <p class="file" id="inbox-composer">src/features/inbox/Composer.tsx</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { useOptimistic, useState } from "react";
+import { MAX_TEXT, sendText } from "../channels/channelApi";
+import { ApiError } from "../../lib/api";
+import type { Channel } from "../../lib/types";
+
+interface Bubble {
+  key: string;
+  text: string;
+  pending?: boolean;
+}
+
+interface ComposerProps {
+  channel: Channel;
+  recipient: string; // PSID, Instagram-scoped ID, or WhatsApp number
+  messages: Bubble[];
+  onSent: (message: Bubble) =&gt; void;
+}
+
+export function Composer({ channel, recipient, messages, onSent }: ComposerProps) {
+  const [draft, setDraft] = useState("");
+  const [error, setError] = useState&lt;string | null&gt;(null);
+  const [optimistic, addOptimistic] = useOptimistic(
+    messages,
+    (current, text: string): Bubble[] =&gt; [
+      ...current,
+      { key: `pending-${current.length}`, text, pending: true },
+    ],
+  );
+
+  async function send() {
+    const text = draft.trim();
+    if (!text) return;
+
+    setError(null);
+    addOptimistic(text);
+    setDraft("");
+    try {
+      const { message_id } = await sendText(channel, recipient, text);
+      onSent({ key: message_id, text });
+    } catch (caught) {
+      setDraft(text); // give the failed message back to the agent
+      setError(caught instanceof ApiError ? caught.detail : "Message not sent. Try again.");
+    }
+  }
+
+  return (
+    &lt;&gt;
+      &lt;ol aria-live="polite"&gt;
+        {optimistic.map((message) =&gt; (
+          &lt;li key={message.key} aria-busy={message.pending}&gt;{message.text}&lt;/li&gt;
+        ))}
+      &lt;/ol&gt;
+      {error &amp;&amp; &lt;p role="alert"&gt;{error}&lt;/p&gt;}
+      &lt;form action={send}&gt;
+        &lt;label htmlFor="reply"&gt;Reply&lt;/label&gt;
+        &lt;textarea
+          id="reply"
+          value={draft}
+          onChange={(event) =&gt; setDraft(event.target.value)}
+          required
+          maxLength={MAX_TEXT[channel.platform]}
+          disabled={!channel.is_active}
+        /&gt;
+        &lt;button disabled={!channel.is_active}&gt;Send&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/&gt;
+  );
+}</code></pre></div>
+
+  <div class="proposed" id="inbox-contract">
+    <h3 style="margin-top:0">Proposed API contract <span class="pill blocked">Not in the API</span></h3>
+    <p>This is a suggestion to discuss with the backend team. None of these routes exist today.</p>
+    <div class="table"><table>
+      <thead><tr><th>Method and path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/conversations?channel_id=&amp;sort=newest&amp;tag=&amp;cursor=</code></td><td>Conversation list, newest first, with cursor paging</td></tr>
+        <tr><td><code>GET /api/conversations/{id}/messages?cursor=</code></td><td>Thread history</td></tr>
+        <tr><td><code>POST /api/conversations/{id}/read</code></td><td>Mark as read</td></tr>
+        <tr><td><code>PATCH /api/conversations/{id}</code></td><td>Assign an agent, or pause the bot</td></tr>
+        <tr><td><code>GET /api/inbox/stream</code></td><td>Live events by Server-Sent Events or WebSocket</td></tr>
+      </tbody>
+    </table></div>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "id": "conv_1",
+  "channel": { "platform": "instagram", "external_id": "17841400000000000" },
+  "contact": { "recipient_id": "9876543210", "name": "Sample customer", "avatar_url": null },
+  "last_message": { "text": "What are your opening hours?", "direction": "inbound", "sender": "contact", "at": "2026-10-30T12:00:00Z" },
+  "reply_window_ends_at": "2026-10-31T12:00:00Z",
+  "unread_count": 1,
+  "handled_by": "ai",
+  "tags": ["urgent", "sponsored"],
+  "bot_paused": false
+}</code></pre></div>
+    <p>The browser's <code>EventSource</code> can't send an <code>Authorization</code> header, so a stream needs a short-lived ticket, cookie auth, or a <code>fetch</code>-based reader. The stream and these routes also need to sit outside the current rate limit.</p>
+  </div>
+</section>
+
+<section id="chatbot">
+  <h2>Chatbot</h2>
+  <p>The chatbot appears in two separate places.</p>
+  <div class="table"><table>
+    <thead><tr><th></th><th>Auto-replies on channels</th><th>Website chat widget</th></tr></thead>
+    <tbody>
+      <tr><td><b>Where it runs</b></td><td>On the server, triggered by Meta webhooks</td><td>In the browser, on any website</td></tr>
+      <tr><td><b>Frontend job</b></td><td>Set <code>chatbot_id</code> when connecting</td><td>The whole chat UI</td></tr>
+      <tr><td><b>Auth</b></td><td>Bearer token</td><td><code>X-API-Key</code> and <code>chatbot-id</code> headers</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Build the widget separately</h3>
+  <p>Give the widget its own Vite entry point and bundle. It should not include the dashboard's router, query cache or session code, and a host site shouldn't have to load them. Render it in a Shadow DOM so the host page's CSS can't affect it.</p>
+  <ul>
+    <li><b>Treat the key as public.</b> The widget's <code>X-API-Key</code> is visible to anyone viewing the page source. Confirm with the backend team that it only grants widget access.</li>
+    <li><b>Don't show <code>context</code>.</b> It holds the retrieved source text and is only useful for debugging.</li>
+    <li><b>Render answers as plain text.</b> If you add Markdown later, use a sanitizing renderer.</li>
+    <li><b>Plan for the shared limit.</b> Loading config uses one request, leaving four questions in the first minute. Show a friendly message on <code>429</code>.</li>
+    <li><b>Apply the config.</b> <code>GET /chat/config</code> supplies the greeting, alignment, colors and FAQ list. Sending an FAQ works the same as typing it.</li>
+  </ul>
+  <p>History expires after 1 hour of inactivity. Save <code>x-session-id</code> and send it back as <code>session-id</code> on later messages. Omit the header on the first message.</p>
+  <p class="file">src/features/widget/chatApi.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import type { ChatResponse } from "../../lib/types";
+
+export interface WidgetKeys {
+  baseUrl: string;
+  apiKey: string;
+  chatbotId: string;
+}
+
+const SESSION_KEY = "chat-session-id";
+
+export async function askChatbot({ baseUrl, apiKey, chatbotId }: WidgetKeys, query: string) {
+  const sessionId = sessionStorage.getItem(SESSION_KEY);
+
+  const response = await fetch(
+    `${baseUrl}/api/public/chat?query=${encodeURIComponent(query)}`,
+    {
+      method: "POST",
+      headers: {
+        "X-API-Key": apiKey,
+        "chatbot-id": chatbotId,
+        ...(sessionId &amp;&amp; { "session-id": sessionId }),
+      },
+    },
+  );
+  if (!response.ok) throw new Error(`Chat failed (${response.status})`);
+
+  // The browser only exposes this header if the API lists it in
+  // Access-Control-Expose-Headers.
+  const nextSession = response.headers.get("x-session-id");
+  if (nextSession) sessionStorage.setItem(SESSION_KEY, nextSession);
+
+  return (await response.json()) as ChatResponse;
+}</code></pre></div>
+  <p class="file" id="widget-code">src/features/widget/ChatWidget.tsx</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">import { useOptimistic, useState } from "react";
+import { askChatbot, type WidgetKeys } from "./chatApi";
+import type { ChatTurn } from "../../lib/types";
+
+export function ChatWidget({ keys, greeting }: { keys: WidgetKeys; greeting: string }) {
+  const [history, setHistory] = useState&lt;ChatTurn[]&gt;([]);
+  const [draft, setDraft] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [turns, addTurn] = useOptimistic(history, (current, content: string): ChatTurn[] =&gt; [
+    ...current,
+    { role: "user", content },
+  ]);
+
+  async function ask() {
+    const query = draft.trim();
+    if (!query) return;
+
+    setFailed(false);
+    addTurn(query);
+    setDraft("");
+    try {
+      const answer = await askChatbot(keys, query);
+      setHistory(answer.history); // the server's history is the source of truth
+    } catch {
+      setDraft(query);
+      setFailed(true);
+    }
+  }
+
+  return (
+    &lt;section aria-label="Chat"&gt;
+      &lt;p&gt;{greeting}&lt;/p&gt;
+      &lt;ol aria-live="polite"&gt;
+        {turns.map((turn, index) =&gt; (
+          // Rendered as text, so model output can never inject markup.
+          &lt;li key={index} data-role={turn.role}&gt;{turn.content}&lt;/li&gt;
+        ))}
+      &lt;/ol&gt;
+      {failed &amp;&amp; &lt;p role="alert"&gt;That didn't send. Please try again in a minute.&lt;/p&gt;}
+      &lt;form action={ask}&gt;
+        &lt;label htmlFor="chat-query"&gt;Your question&lt;/label&gt;
+        &lt;input
+          id="chat-query"
+          value={draft}
+          onChange={(event) =&gt; setDraft(event.target.value)}
+          autoComplete="off"
+          required
+        /&gt;
+        &lt;button&gt;Send&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/section&gt;
+  );
+}</code></pre></div>
+</section>
+
+<section id="objects">
+  <h2>Response shapes</h2>
+  <p class="file">src/lib/types.ts</p>
+  <div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-typescript">export type Platform = "facebook" | "instagram" | "whatsapp";
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface TokenPair {
+  access_token: string;
+  refresh_token: string;
+  token_type: "bearer";
+  expires_in: number; // seconds
+}
+
+export interface Channel {
+  id: string;
+  platform: Platform;
+  external_id: string; // the ID used in every channel path
+  name: string;
+  chatbot_id: string | null; // null = connected, no auto-replies
+  is_active: boolean; // false after disconnect
+  token_expires_at: string | null;
+  config: Record&lt;string, string | undefined&gt;;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChannelStatus {
+  external_id: string;
+  is_active: boolean;
+  token_valid: boolean;
+  webhook_subscribed: boolean | null; // null = could not be checked
+  token_expires_at: string | null;
+  error: string | null;
+}
+
+export interface FacebookPage {
+  id: string;
+  name: string;
+  category: string;
+  picture_url: string;
+  connected: boolean;
+}
+
+export interface SendTextResponse {
+  message_id: string;
+  recipient_id: string;
+}
+
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatResponse {
+  query: string;
+  answer: string;
+  context: string; // retrieved source text; do not show to visitors
+  history: ChatTurn[];
+}</code></pre></div>
+  <h3 id="obj-user">User</h3>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{ "id": 1, "name": "Jane Doe", "email": "jane@example.com", "is_active": true, "created_at": "2026-10-30T12:00:00Z" }</code></pre></div>
+  <h3 id="obj-channel">Channel</h3>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "id": "6f1c2b7e-4c1a-4f0e-9a51-2b0f3c9d8e11",
+  "platform": "facebook",
+  "external_id": "104857392011",
+  "name": "My Page",
+  "chatbot_id": "a3d5e7f9-1111-2222-3333-444455556666",
+  "is_active": true,
+  "token_expires_at": null,
+  "config": { "category": "Education", "picture_url": "https://..." },
+  "created_at": "2026-10-30T12:00:00Z",
+  "updated_at": "2026-10-30T12:00:00Z"
+}</code></pre></div>
+  <div class="table"><table>
+    <thead><tr><th>Field</th><th>Facebook</th><th>Instagram</th><th>WhatsApp</th></tr></thead>
+    <tbody>
+      <tr><td><code>external_id</code></td><td>Page ID</td><td>Instagram account ID</td><td>Phone number ID</td></tr>
+      <tr><td><code>name</code></td><td>Page name</td><td>Username</td><td>Verified business name</td></tr>
+      <tr><td><code>token_expires_at</code></td><td>Usually <code>null</code></td><td>Set (60-day token)</td><td>Usually <code>null</code></td></tr>
+      <tr><td><code>config</code></td><td><code>category</code>, <code>picture_url</code></td><td><code>username</code>, <code>account_type</code>, <code>profile_picture_url</code>, <code>app_scoped_id</code></td><td><code>display_phone_number</code>, <code>verified_name</code>, <code>quality_rating</code>, <code>waba_id</code> (if given)</td></tr>
+    </tbody>
+  </table></div>
+  <h3 id="obj-status">Channel status</h3>
+  <p>Checks live with Meta, so it's slower than the list. <code>token_valid: false</code> means prompt the user to reconnect or update the token, with Meta's reason in <code>error</code>. <code>webhook_subscribed: null</code> means it couldn't be checked, because the token is invalid or a WhatsApp channel has no <code>waba_id</code>.</p>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{ "external_id": "104857392011", "is_active": true, "token_valid": true, "webhook_subscribed": true, "token_expires_at": null, "error": null }</code></pre></div>
+  <h3 id="obj-details">Channel details</h3>
+  <p>The saved channel plus live profile data from Meta. Each platform's <code>details</code> fields are listed on its endpoint in the reference.</p>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{ "channel": { "id": "…" }, "details": { "id": "…" } }</code></pre></div>
+  <h3 id="obj-webhook">Webhook check</h3>
+  <p><code>subscribed: null</code> means it couldn't be determined, and <code>detail</code> explains why.</p>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{ "subscribed": true, "subscribed_fields": ["messages"], "detail": null }</code></pre></div>
+  <h3 id="obj-send">Send text response</h3>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{ "message_id": "m_AbC123...", "recipient_id": "24830219384" }</code></pre></div>
+</section>
+
+<section id="errors">
+  <h2>Error handling</h2>
+  <p>Every error except <code>422</code> has the body <code>{ "detail": "Human readable message" }</code>. <code>422</code> returns FastAPI's list format, which <code>ApiError.fieldErrors</code> turns into per-field messages:</p>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "detail": [
+    { "loc": ["body", "email"], "msg": "value is not a valid email address", "type": "value_error" }
+  ]
+}</code></pre></div>
+  <div class="table"><table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>What the UI does</th></tr></thead>
+    <tbody>
+      <tr><td><code>400</code></td><td>Bad input, or Meta rejected the token or request</td><td>Show <code>detail</code>, which contains Meta's message</td></tr>
+      <tr><td><code>401</code></td><td>Missing, invalid, expired or logged-out token</td><td>Handled by <code>api.ts</code>. On the login form, show the message</td></tr>
+      <tr><td><code>403</code></td><td>Account disabled (login only)</td><td>Show the message</td></tr>
+      <tr><td><code>404</code></td><td>Not found, or belongs to another user</td><td>Show not found and refresh the channel list</td></tr>
+      <tr><td><code>409</code></td><td>Email already registered, or account connected by another user</td><td>Show <code>detail</code> next to the form</td></tr>
+      <tr><td><code>422</code></td><td>Validation failed</td><td>Show messages next to each field</td></tr>
+      <tr><td><code>429</code></td><td>Rate limit exceeded</td><td>Ask the user to wait a minute. Don't retry automatically</td></tr>
+      <tr><td><code>502</code></td><td>Meta's API failed or couldn't be reached</td><td>Say Meta isn't responding and offer a retry</td></tr>
+      <tr><td><code>503</code></td><td>Server is missing configuration</td><td>Say connecting is unavailable, and log it</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="reference">
+  <h2>API reference</h2>
+  <p>All 40 endpoints the frontend calls. Local base URL: <code>http://127.0.0.1:8080</code>. Try requests at <code>{BASE_URL}/docs</code>. Bodies are JSON unless noted.</p>
+  <label for="ep-search" class="k">Filter endpoints</label>
+  <input class="search" id="ep-search" type="search" placeholder="Try send, status, whatsapp or DELETE" autocomplete="off">
+  <p class="caption" id="ep-result" aria-live="polite"></p>
+  <div id="ep-list"><div class="ep-group" data-group="Auth"><h3>Auth <span class="count">5 endpoints</span></h3><details class="ep" data-search="post /api/auth/user/register create an account auth"><summary><span class="m m-post">POST</span><code class="p">/api/auth/user/register</code><span class="s">Create an account</span></summary><div class="ep-b"><p>Create an account.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "at-least-8-chars"
+}</code></pre></div><p class="k">Success: <b>201</b> <a href="#obj-user">User</a></p><p>name is 1–255 characters. Email is stored lowercase, so Jane@Example.com and jane@example.com are the same account. Password is 8–72 characters (max 72 bytes). Register does not log the user in, so call login afterwards.</p><p class="k">Errors: <span class="err">409 email already registered · 422</span></p></div></details><details class="ep" data-search="post /api/auth/user/login get tokens auth"><summary><span class="m m-post">POST</span><code class="p">/api/auth/user/login</code><span class="s">Get tokens</span></summary><div class="ep-b"><p>Get tokens.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "email": "jane@example.com",
+  "password": "at-least-8-chars"
+}</code></pre></div><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "access_token": "eyJhbGciOi...",
+  "refresh_token": "eyJhbGciOi...",
+  "token_type": "bearer",
+  "expires_in": 900
+}</code></pre></div><p class="k">Errors: <span class="err">401 &quot;Invalid email or password&quot; (same message whether or not the email exists) · 403 account disabled</span></p></div></details><details class="ep" data-search="post /api/auth/user/refresh exchange a refresh token for a new pair auth"><summary><span class="m m-post">POST</span><code class="p">/api/auth/user/refresh</code><span class="s">Exchange a refresh token for a new pair</span></summary><div class="ep-b"><p>Exchange a refresh token for a new pair.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "refresh_token": "eyJhbGciOi..."
+}</code></pre></div><p class="k">Success: <b>200</b> Same shape as login</p><p>Replace both stored tokens. The old refresh token stops working.</p><p class="k">Errors: <span class="err">401 invalid, expired, already used, or logged out</span></p></div></details><details class="ep" data-search="post /api/auth/user/logout revoke both tokens auth"><summary><span class="m m-post">POST</span><code class="p">/api/auth/user/logout</code><span class="s">Revoke both tokens</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Revoke both tokens.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "refresh_token": "eyJhbGciOi..."
+}</code></pre></div><p class="k">Success: <b>204</b> No body</p><p>The access token in the header and this refresh token stop working immediately. Clear them on the client.</p></div></details><details class="ep" data-search="get /api/auth/user/me current user auth"><summary><span class="m m-get">GET</span><code class="p">/api/auth/user/me</code><span class="s">Current user</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Current user.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "id": 1,
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "is_active": true,
+  "created_at": "2026-10-30T12:00:00Z"
+}</code></pre></div></div></details></div><div class="ep-group" data-group="Facebook"><h3>Facebook <span class="count">12 endpoints</span></h3><details class="ep" data-search="get /api/channels/facebook/oauth/url get the facebook login url facebook"><summary><span class="m m-get">GET</span><code class="p">/api/channels/facebook/oauth/url</code><span class="s">Get the Facebook login URL</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Get the Facebook login URL.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "url": "https://www.facebook.com/v21.0/dialog/oauth?client_id=...&amp;state=...",
+  "state": "x8Gq..."
+}</code></pre></div><p class="k">Errors: <span class="err">503 Facebook app not configured on the server</span></p></div></details><details class="ep" data-search="post /api/channels/facebook/oauth/callback exchange the oauth code and list the user&#x27;s pages facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook/oauth/callback</code><span class="s">Exchange the OAuth code and list the user&#x27;s pages</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Exchange the OAuth code and list the user&#x27;s pages.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "code": "&lt;code from redirect query&gt;",
+  "state": "&lt;state from redirect query&gt;"
+}</code></pre></div><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">[
+  {
+    "id": "104857392011",
+    "name": "My Page",
+    "category": "Education",
+    "picture_url": "https://...",
+    "connected": false
+  }
+]</code></pre></div><p>connected: true means this user already connected the page. Connecting it again updates it.</p><p class="k">Errors: <span class="err">400 invalid or expired state, or Facebook rejected the code · 503</span></p></div></details><details class="ep" data-search="post /api/channels/facebook/pages/connect connect pages chosen from the callback facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook/pages/connect</code><span class="s">Connect pages chosen from the callback</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Connect pages chosen from the callback.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "page_ids": [
+    "104857392011"
+  ],
+  "chatbot_id": "a3d5e7f9-..."
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a>[]</p><p>chatbot_id is optional. Connecting a page again updates it.</p><p class="k">Errors: <span class="err">400 no pending pages (OAuth expired), a page was not in the OAuth result, or invalid chatbot · 409 page connected by another user</span></p></div></details><details class="ep" data-search="post /api/channels/facebook connect one page with a page access token (no oauth) facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook</code><span class="s">Connect one page with a page access token (no OAuth)</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Connect one page with a page access token (no OAuth).</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "page_id": "104857392011",
+  "access_token": "EAAG...",
+  "chatbot_id": "a3d5e7f9-..."
+}</code></pre></div><p class="k">Success: <b>201</b> <a href="#obj-channel">Channel</a></p><p>Calling this for a connected page updates it. Use it to change the chatbot.</p><p class="k">Errors: <span class="err">400 invalid token or chatbot · 409</span></p></div></details><details class="ep" data-search="get /api/channels/facebook list connected pages facebook"><summary><span class="m m-get">GET</span><code class="p">/api/channels/facebook</code><span class="s">List connected pages</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>List connected pages.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a>[] (includes disconnected pages)</p></div></details><details class="ep" data-search="post /api/channels/facebook/token replace a page&#x27;s access token facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook/token</code><span class="s">Replace a page&#x27;s access token</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Replace a page&#x27;s access token.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "page_id": "104857392011",
+  "access_token": "EAAG..."
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a></p><p class="k">Errors: <span class="err">400 token invalid for this page · 404</span></p></div></details><details class="ep" data-search="get /api/channels/facebook/{page_id}/status live token and webhook check facebook"><summary><span class="m m-get">GET</span><code class="p">/api/channels/facebook/{page_id}/status</code><span class="s">Live token and webhook check</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live token and webhook check.</p><p class="k">Success: <b>200</b> <a href="#obj-status">Channel status</a></p></div></details><details class="ep" data-search="get /api/channels/facebook/{page_id}/details live page details facebook"><summary><span class="m m-get">GET</span><code class="p">/api/channels/facebook/{page_id}/details</code><span class="s">Live page details</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live page details.</p><p class="k">Success: <b>200</b> <a href="#obj-details">Channel details</a></p><p>details fields: id, name, category, about, link, website, fan_count, followers_count, picture.data.url.</p></div></details><details class="ep" data-search="post /api/channels/facebook/{page_id}/reconnect re-subscribe and reactivate facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook/{page_id}/reconnect</code><span class="s">Re-subscribe and reactivate</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Re-subscribe and reactivate.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a> with is_active: true</p><p>No body.</p><p class="k">Errors: <span class="err">400 saved token no longer valid; use /token or OAuth to replace it</span></p></div></details><details class="ep" data-search="delete /api/channels/facebook/{page_id} disconnect facebook"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/facebook/{page_id}</code><span class="s">Disconnect</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Disconnect.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a> with is_active: false</p></div></details><details class="ep" data-search="delete /api/channels/facebook/{page_id}/remove remove facebook"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/facebook/{page_id}/remove</code><span class="s">Remove</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Remove.</p><p class="k">Success: <b>204</b> No body</p></div></details><details class="ep" data-search="post /api/channels/facebook/send/text send a message from a page facebook"><summary><span class="m m-post">POST</span><code class="p">/api/channels/facebook/send/text</code><span class="s">Send a message from a page</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Send a message from a page.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "page_id": "104857392011",
+  "recipient_id": "24830219384",
+  "text": "Hello!"
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-send">Send text response</a></p><p>recipient_id is the person&#x27;s page-scoped ID (PSID), taken from an incoming message. text is 1–4096 characters; Facebook truncates to 2000.</p><p class="k">Errors: <span class="err">400 channel disconnected, or Meta rejected it (for example outside the 24-hour reply window)</span></p></div></details></div><div class="ep-group" data-group="Instagram"><h3>Instagram <span class="count">11 endpoints</span></h3><details class="ep" data-search="get /api/channels/instagram/oauth-config get the instagram login url and config instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram/oauth-config</code><span class="s">Get the Instagram login URL and config</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Get the Instagram login URL and config.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "app_id": "1234567890",
+  "redirect_uri": "https://nepaeducation-fronted.vercel.app/social-media-integration/instagram",
+  "scopes": [
+    "instagram_business_basic",
+    "instagram_business_manage_messages"
+  ],
+  "auth_url": "https://www.instagram.com/oauth/authorize?client_id=...&amp;state=...",
+  "state": "x8Gq..."
+}</code></pre></div><p class="k">Errors: <span class="err">503 Instagram app not configured</span></p></div></details><details class="ep" data-search="post /api/channels/instagram/connect connect with an oauth code or an access token instagram"><summary><span class="m m-post">POST</span><code class="p">/api/channels/instagram/connect</code><span class="s">Connect with an OAuth code or an access token</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Connect with an OAuth code or an access token.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "code": "AQBx...",
+  "state": "x8Gq...",
+  "chatbot_id": "a3d5e7f9-..."
+}</code></pre></div><p class="k">Success: <b>201</b> <a href="#obj-channel">Channel</a></p><p>Send either code + state, or { &quot;access_token&quot;: &quot;IGAA...&quot;, &quot;chatbot_id&quot;: &quot;...&quot; }. external_id is the Instagram account ID. With OAuth, token_expires_at is about 60 days ahead.</p><p class="k">Errors: <span class="err">400 invalid state, code, token or chatbot · 409 connected by another user · 422 neither or both of code/access_token, or code without state</span></p></div></details><details class="ep" data-search="get /api/channels/instagram list connected accounts instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram</code><span class="s">List connected accounts</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>List connected accounts.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a>[]</p></div></details><details class="ep" data-search="post /api/channels/instagram/token replace an account&#x27;s access token instagram"><summary><span class="m m-post">POST</span><code class="p">/api/channels/instagram/token</code><span class="s">Replace an account&#x27;s access token</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Replace an account&#x27;s access token.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "instagram_id": "17841400000000000",
+  "access_token": "IGAA..."
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a></p><p class="k">Errors: <span class="err">400 token invalid, or it belongs to a different Instagram account · 404</span></p></div></details><details class="ep" data-search="get /api/channels/instagram/{instagram_id}/status live token and webhook check instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram/{instagram_id}/status</code><span class="s">Live token and webhook check</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live token and webhook check.</p><p class="k">Success: <b>200</b> <a href="#obj-status">Channel status</a></p><p>Warn the user when token_expires_at is near. Calling reconnect extends it.</p></div></details><details class="ep" data-search="get /api/channels/instagram/{instagram_id}/details live profile details instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram/{instagram_id}/details</code><span class="s">Live profile details</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live profile details.</p><p class="k">Success: <b>200</b> <a href="#obj-details">Channel details</a></p><p>details fields: id, user_id, username, name, account_type, profile_picture_url, biography, website, followers_count, follows_count, media_count.</p></div></details><details class="ep" data-search="get /api/channels/instagram/{instagram_id}/webhook-check webhook subscription check instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram/{instagram_id}/webhook-check</code><span class="s">Webhook subscription check</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Webhook subscription check.</p><p class="k">Success: <b>200</b> <a href="#obj-webhook">Webhook check</a></p><p>subscribed is true when messages is subscribed.</p></div></details><details class="ep" data-search="post /api/channels/instagram/{instagram_id}/reconnect refresh token, re-subscribe, reactivate instagram"><summary><span class="m m-post">POST</span><code class="p">/api/channels/instagram/{instagram_id}/reconnect</code><span class="s">Refresh token, re-subscribe, reactivate</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Refresh token, re-subscribe, reactivate.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a></p><p>No body. Refreshes the 60-day token, re-subscribes webhooks and sets is_active: true.</p><p class="k">Errors: <span class="err">400 token cannot be refreshed (expired); connect again with OAuth</span></p></div></details><details class="ep" data-search="delete /api/channels/instagram/{instagram_id} disconnect instagram"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/instagram/{instagram_id}</code><span class="s">Disconnect</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Disconnect.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a> with is_active: false</p></div></details><details class="ep" data-search="delete /api/channels/instagram/{instagram_id}/remove remove instagram"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/instagram/{instagram_id}/remove</code><span class="s">Remove</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Remove.</p><p class="k">Success: <b>204</b> No body</p></div></details><details class="ep" data-search="post /api/channels/instagram/send/text send a dm from the account instagram"><summary><span class="m m-post">POST</span><code class="p">/api/channels/instagram/send/text</code><span class="s">Send a DM from the account</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Send a DM from the account.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "instagram_id": "17841400000000000",
+  "recipient_id": "9876543210",
+  "text": "Hi!"
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-send">Send text response</a></p><p>recipient_id is the Instagram-scoped user ID of someone who messaged the account. text is 1–4096 characters; Instagram truncates to 1000.</p><p class="k">Errors: <span class="err">400 channel disconnected, or Meta rejected it</span></p></div></details></div><div class="ep-group" data-group="WhatsApp"><h3>WhatsApp <span class="count">10 endpoints</span></h3><details class="ep" data-search="post /api/channels/whatsapp/connect connect a number whatsapp"><summary><span class="m m-post">POST</span><code class="p">/api/channels/whatsapp/connect</code><span class="s">Connect a number</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Connect a number.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "phone_number_id": "109876543210987",
+  "access_token": "EAAG...",
+  "waba_id": "102345678901234",
+  "chatbot_id": "a3d5e7f9-..."
+}</code></pre></div><p class="k">Success: <b>201</b> <a href="#obj-channel">Channel</a></p><p>waba_id is optional but recommended: without it, incoming messages are not subscribed and webhook-check returns subscribed: null. Use a permanent System User token; temporary dashboard tokens expire in 24 hours.</p><p class="k">Errors: <span class="err">400 invalid token, phone number ID or chatbot · 409 connected by another user</span></p></div></details><details class="ep" data-search="get /api/channels/whatsapp list connected numbers whatsapp"><summary><span class="m m-get">GET</span><code class="p">/api/channels/whatsapp</code><span class="s">List connected numbers</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>List connected numbers.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a>[]</p></div></details><details class="ep" data-search="post /api/channels/whatsapp/token replace a number&#x27;s access token whatsapp"><summary><span class="m m-post">POST</span><code class="p">/api/channels/whatsapp/token</code><span class="s">Replace a number&#x27;s access token</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Replace a number&#x27;s access token.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "phone_number_id": "109876543210987",
+  "access_token": "EAAG..."
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a></p><p class="k">Errors: <span class="err">400 token invalid · 404</span></p></div></details><details class="ep" data-search="get /api/channels/whatsapp/{phone_number_id}/status live token and webhook check whatsapp"><summary><span class="m m-get">GET</span><code class="p">/api/channels/whatsapp/{phone_number_id}/status</code><span class="s">Live token and webhook check</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live token and webhook check.</p><p class="k">Success: <b>200</b> <a href="#obj-status">Channel status</a></p></div></details><details class="ep" data-search="get /api/channels/whatsapp/{phone_number_id}/details live number details whatsapp"><summary><span class="m m-get">GET</span><code class="p">/api/channels/whatsapp/{phone_number_id}/details</code><span class="s">Live number details</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Live number details.</p><p class="k">Success: <b>200</b> <a href="#obj-details">Channel details</a></p><p>details fields: id, display_phone_number, verified_name, quality_rating, code_verification_status, name_status, messaging_limit_tier, platform_type, throughput.</p></div></details><details class="ep" data-search="get /api/channels/whatsapp/{phone_number_id}/webhook-check webhook subscription check whatsapp"><summary><span class="m m-get">GET</span><code class="p">/api/channels/whatsapp/{phone_number_id}/webhook-check</code><span class="s">Webhook subscription check</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Webhook subscription check.</p><p class="k">Success: <b>200</b> <a href="#obj-webhook">Webhook check</a></p><p>Returns subscribed: null with a detail if the channel has no waba_id. Connect again with waba_id to fix that.</p></div></details><details class="ep" data-search="post /api/channels/whatsapp/{phone_number_id}/reconnect re-subscribe and reactivate whatsapp"><summary><span class="m m-post">POST</span><code class="p">/api/channels/whatsapp/{phone_number_id}/reconnect</code><span class="s">Re-subscribe and reactivate</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Re-subscribe and reactivate.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a> with is_active: true</p><p>No body.</p></div></details><details class="ep" data-search="delete /api/channels/whatsapp/{phone_number} disconnect whatsapp"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/whatsapp/{phone_number}</code><span class="s">Disconnect</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Disconnect.</p><p class="k">Success: <b>200</b> <a href="#obj-channel">Channel</a> with is_active: false</p><p>Accepts the phone number ID (external_id) or the display number in any formatting. URL-encode + as %2B.</p></div></details><details class="ep" data-search="delete /api/channels/whatsapp/{phone_number}/remove remove whatsapp"><summary><span class="m m-delete">DELETE</span><code class="p">/api/channels/whatsapp/{phone_number}/remove</code><span class="s">Remove</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Remove.</p><p class="k">Success: <b>204</b> No body</p><p>Accepts the phone number ID (external_id) or the display number in any formatting. URL-encode + as %2B.</p></div></details><details class="ep" data-search="post /api/channels/whatsapp/send/text send a whatsapp message whatsapp"><summary><span class="m m-post">POST</span><code class="p">/api/channels/whatsapp/send/text</code><span class="s">Send a WhatsApp message</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Send a WhatsApp message.</p><p class="k">Request</p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "phone_number_id": "109876543210987",
+  "to": "15550002222",
+  "text": "Hello!"
+}</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-send">Send text response</a> (recipient_id is the WhatsApp ID)</p><p>to is the recipient number in international format, digits only. text is 1–4096 characters.</p><p class="k">Errors: <span class="err">400 channel disconnected, or Meta rejected it (for example outside the 24-hour window; starting a conversation needs a template message, which is not supported yet)</span></p></div></details></div><div class="ep-group" data-group="Chat widget"><h3>Chat widget <span class="count">2 endpoints</span></h3><details class="ep" data-search="post /api/public/chat?query=... ask the chatbot chat widget"><summary><span class="m m-post">POST</span><code class="p">/api/public/chat?query=...</code><span class="s">Ask the chatbot</span><span class="lock">X-API-Key</span></summary><div class="ep-b"><p>Ask the chatbot.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "query": "What are your opening hours?",
+  "answer": "We're open 9am to 5pm, Monday to Friday.",
+  "context": "...retrieved source text...",
+  "history": [
+    {
+      "role": "user",
+      "content": "What are your opening hours?"
+    },
+    {
+      "role": "assistant",
+      "content": "We're open 9am to 5pm, Monday to Friday."
+    }
+  ]
+}</code></pre></div><p>The question goes in the query string and there is no body. Send the optional session-id header after the first message. Save the x-session-id response header and send it back to keep history, which expires after 1 hour of inactivity.</p><p class="k">Errors: <span class="err">400 invalid chatbot, or chatbot has no AI settings · 401 bad X-API-Key</span></p></div></details><details class="ep" data-search="get /api/public/chat/config widget appearance and faqs chat widget"><summary><span class="m m-get">GET</span><code class="p">/api/public/chat/config</code><span class="s">Widget appearance and FAQs</span><span class="lock">X-API-Key</span></summary><div class="ep-b"><p>Widget appearance and FAQs.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
+  "status": "success",
+  "chat_interface_settings": {
+    "initial_message": "Hi! How can I help?",
+    "widget_alignment": "right",
+    "background_color": "#ffffff",
+    "user_bubble_color": "#2563eb",
+    "bot_bubble_color": "#f3f4f6",
+    "faqs": [
+      "What are your opening hours?"
+    ]
+  }
+}</code></pre></div><p class="k">Errors: <span class="err">404 chatbot or its interface settings not found</span></p></div></details></div></div>
+  <h3>Widget headers</h3>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-text">X-API-Key: &lt;widget access key&gt;
+chatbot-id: &lt;chatbot uuid&gt;
+session-id: &lt;from x-session-id&gt;     (optional; chat only)</code></pre></div>
+  <h3>Not for the frontend</h3>
+  <p>These must not be called from the browser.</p>
+  <div class="table"><table>
+    <thead><tr><th>Method</th><th>Path</th><th>Called by</th></tr></thead>
+    <tbody>
+      <tr><td>GET / POST</td><td><code>/api/webhooks/facebook</code></td><td>Meta (signed with the Facebook app secret)</td></tr>
+      <tr><td>POST</td><td><code>/api/webhooks/facebook/{channel_id}</code></td><td>Meta</td></tr>
+      <tr><td>GET / POST</td><td><code>/api/webhooks/instagram</code></td><td>Meta (signed with the Instagram app secret)</td></tr>
+      <tr><td>GET / POST</td><td><code>/api/webhooks/whatsapp</code></td><td>Meta</td></tr>
+      <tr><td>POST</td><td><code>/api/embed-data/</code></td><td>Backend services, with the <code>X-Shared-Key</code> server secret</td></tr>
+      <tr><td>GET</td><td><code>/</code></td><td>Health check, returns <code>"ok!"</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>Webhook URLs for the Meta App Dashboard are <code>{PUBLIC_BASE_URL}/api/webhooks/facebook</code>, <code>/instagram</code> and <code>/whatsapp</code>, each with that platform's verify token from the server settings.</p>
+</section>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+if (window.hljs) document.querySelectorAll("pre code:not(.language-text)").forEach(function (el) { hljs.highlightElement(el); });
+
+document.querySelectorAll(".copy").forEach(function (button) {
+  button.addEventListener("click", function () {
+    var code = button.parentElement.querySelector("code");
+    navigator.clipboard.writeText(code.textContent).then(function () {
+      button.textContent = "Copied";
+      setTimeout(function () { button.textContent = "Copy"; }, 1500);
+    }).catch(function () {
+      var range = document.createRange();
+      range.selectNodeContents(code);
+      var selection = getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      button.textContent = "Press Ctrl+C";
+    });
+  });
+});
+
+document.querySelectorAll(".shot").forEach(function (shot) {
+  var buttons = shot.querySelectorAll(".states button");
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      buttons.forEach(function (other) { other.setAttribute("aria-pressed", String(other === button)); });
+      shot.querySelectorAll("[data-p]").forEach(function (panel) { panel.hidden = panel.dataset.p !== button.dataset.s; });
+    });
+  });
+});
+
+var search = document.getElementById("ep-search");
+var result = document.getElementById("ep-result");
+search.addEventListener("input", function () {
+  var query = search.value.trim().toLowerCase();
+  var shown = 0;
+  document.querySelectorAll(".ep-group").forEach(function (group) {
+    var groupShown = 0;
+    group.querySelectorAll(".ep").forEach(function (endpoint) {
+      var match = endpoint.dataset.search.indexOf(query) !== -1;
+      endpoint.hidden = !match;
+      if (match) groupShown++;
+    });
+    group.hidden = groupShown === 0;
+    shown += groupShown;
+  });
+  result.textContent = query ? shown + " of 40 endpoints match" : "";
+});
+</script>
