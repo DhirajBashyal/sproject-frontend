@@ -312,7 +312,7 @@ i.n { display: inline-grid; place-items: center; width: 18px; height: 18px; marg
     <p>Because tokens are returned in JSON, the app has to store them where any cross-site scripting bug could read them. This guide uses <code>localStorage</code> so tabs can share them.</p>
     <p class="ask"><b>Ask:</b> consider an <code>HttpOnly</code> cookie for the refresh token. Until then, keep a strict Content Security Policy and never render message content as HTML.</p></div>
   <div class="gap"><span class="minor">8</span><h3>OAuth redirects always go to production</h3>
-    <p>The redirect pages are fixed to <code>nepaeducation-fronted.vercel.app</code>, so a login started on localhost returns to the deployed site. The <code>state</code> also belongs to the API that issued it.</p>
+    <p>The redirect pages are fixed to <code>sproject-frontend.vercel.app</code>, so a login started on localhost returns to the deployed site. The <code>state</code> also belongs to the API that issued it.</p>
     <p class="ask"><b>Ask:</b> make the redirect URI configurable per environment and add the local URL to the Meta app settings.</p></div>
   <div class="gap" id="gap-design"><span class="minor">9</span><h3>The product designs need more data</h3>
     <p>The Integrations page has an on/off switch for the chat widget, and the API has no route for it. The inbox shows AI labels, tags and sorting, which the proposed contract now includes. The sample messages also thank people for comments, but the API only documents direct messages.</p>
@@ -1539,7 +1539,7 @@ export interface ChatResponse {
   "text": "Hello!"
 }</code></pre></div><p class="k">Success: <b>200</b> <a href="#obj-send">Send text response</a></p><p>recipient_id is the person&#x27;s page-scoped ID (PSID), taken from an incoming message. text is 1–4096 characters; Facebook truncates to 2000.</p><p class="k">Errors: <span class="err">400 channel disconnected, or Meta rejected it (for example outside the 24-hour reply window)</span></p></div></details></div><div class="ep-group" data-group="Instagram"><h3>Instagram <span class="count">11 endpoints</span></h3><details class="ep" data-search="get /api/channels/instagram/oauth-config get the instagram login url and config instagram"><summary><span class="m m-get">GET</span><code class="p">/api/channels/instagram/oauth-config</code><span class="s">Get the Instagram login URL and config</span><span class="lock">Bearer</span></summary><div class="ep-b"><p>Get the Instagram login URL and config.</p><p class="k">Success: <b>200</b></p><div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-json">{
   "app_id": "1234567890",
-  "redirect_uri": "https://nepaeducation-fronted.vercel.app/social-media-integration/instagram",
+  "redirect_uri": "https://sproject-frontend.vercel.app/social-media-integration/instagram",
   "scopes": [
     "instagram_business_basic",
     "instagram_business_manage_messages"

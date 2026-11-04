@@ -40,7 +40,8 @@ Restart the dev server after changing these values.
 - **Inbox:** the API has no routes for reading conversations, so the inbox uses sample data. Connect real routes in `src/features/inbox/api/inbox.api.ts`.
 - **Chatbots:** the API can't list chatbots, so connect forms ask for a chatbot ID.
 - **Widget switch:** the API has no on/off route, so the switch on the Integrations page is disabled.
-- **OAuth:** Meta redirects to the URI configured on the backend. Don't rename `/social-media-integration/facebook` or `/social-media-integration/instagram`.
+- **OAuth:** Meta redirects to the URI configured on the backend (`FACEBOOK_REDIRECT_URI`), currently `https://sproject-frontend.vercel.app/social-media-integration/facebook`. Don't rename `/social-media-integration/facebook` or `/social-media-integration/instagram`.
+- **Vercel:** `vercel.json` sends every path to `index.html`, so the OAuth redirect pages load instead of returning 404.
 - **Rate limit:** the API allows 5 requests per minute per IP, so the app caches data and doesn't poll.
 
 ## Reference
