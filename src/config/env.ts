@@ -5,7 +5,6 @@ const schema = z.object({
   VITE_API_BASE_URL: z.url(),
   VITE_WIDGET_API_KEY: z.string().default(""),
   VITE_WIDGET_CHATBOT_ID: z.string().default(""),
-  VITE_INBOX_USE_MOCK: z.stringbool().default(false),
 });
 
 const parsed = schema.safeParse(import.meta.env);
@@ -19,5 +18,4 @@ export const env = {
   apiBaseUrl: parsed.data.VITE_API_BASE_URL.replace(/\/$/, ""),
   widgetApiKey: parsed.data.VITE_WIDGET_API_KEY,
   widgetChatbotId: parsed.data.VITE_WIDGET_CHATBOT_ID,
-  inboxUseMock: parsed.data.VITE_INBOX_USE_MOCK,
 };

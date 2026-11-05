@@ -45,6 +45,34 @@ function ProfileData({ channel }: { channel: Channel }) {
   );
 }
 
+function WebhookCheckButton({ channel }: { channel: Channel }) {
+  const { data, error, isFetching, refetch } = useQuery({
+    queryKey: ["webhook-check", channel.platform, channel.external_id],
+    queryFn: () => channelsApi.webhookCheck(channel),
+    enabled: false,
+  });
+
+  return (
+    <div className="grid gap-2">
+      <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+        {isFetching ? "Checking…" : "Check message delivery"}
+      </Button>
+      {error && <Alert>{toApiError(error).detail}</Alert>}
+      {data &&
+        (data.subscribed ? (
+          <Alert variant="info">Receiving messages. Subscribed to: {data.subscribed_fields.join(", ")}.</Alert>
+        ) : (
+          <Alert variant="warning">
+            {data.detail ??
+              (data.subscribed === false
+                ? "Not subscribed to messages. Reconnect to fix it."
+                : "Couldn't check message delivery.")}
+          </Alert>
+        ))}
+    </div>
+  );
+}
+
 export function ChannelDetailsDialog({ channel, onClose }: { channel: Channel; onClose: () => void }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [token, setToken] = useState("");
@@ -123,6 +151,7 @@ export function ChannelDetailsDialog({ channel, onClose }: { channel: Channel; o
             {updateToken.isSuccess && <Alert variant="info">Token updated.</Alert>}
 
             <ProfileData channel={channel} />
+            {channel.platform !== "facebook" && <WebhookCheckButton channel={channel} />}
 
             <form
               className="grid gap-1.5"

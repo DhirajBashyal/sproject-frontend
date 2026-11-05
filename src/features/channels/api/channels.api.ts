@@ -6,6 +6,7 @@ import type {
   FacebookPage,
   Platform,
   SendTextResponse,
+  WebhookCheck,
 } from "../types";
 
 const base = (platform: Platform) => `/api/channels/${platform}`;
@@ -39,6 +40,10 @@ export const channelsApi = {
     http.get<ChannelStatus>(`${channelPath(channel)}/status`).then((r) => r.data),
   details: (channel: Channel) =>
     http.get<ChannelDetails>(`${channelPath(channel)}/details`).then((r) => r.data),
+
+  // Instagram and WhatsApp only.
+  webhookCheck: (channel: Channel) =>
+    http.get<WebhookCheck>(`${channelPath(channel)}/webhook-check`).then((r) => r.data),
 
   reconnect: (channel: Channel) =>
     http.post<Channel>(`${channelPath(channel)}/reconnect`).then((r) => r.data),

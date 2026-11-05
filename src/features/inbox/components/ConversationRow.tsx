@@ -1,14 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { PLATFORM_LABEL, PlatformIcon } from "@/features/channels/components/PlatformIcon";
 import { cn } from "@/lib/utils";
-import type { Conversation } from "../types";
-
-const VISIBLE_TAGS = 2;
-
-const tagStyles: Record<string, string> = {
-  urgent: "border-destructive bg-destructive-soft text-destructive",
-  sponsored: "border-success bg-success-soft text-success",
-};
+import { displayName, type Conversation } from "../types";
 
 function initials(name: string) {
   return name
@@ -19,7 +12,11 @@ function initials(name: string) {
 }
 
 export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const date = new Date(iso);
+  const today = new Date().toDateString() === date.toDateString();
+  return today
+    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 interface ConversationRowProps {
@@ -29,8 +26,8 @@ interface ConversationRowProps {
 }
 
 export function ConversationRow({ conversation, selected, onSelect }: ConversationRowProps) {
-  const { contact, channel, last_message, handled_by, tags } = conversation;
-  const extraTags = tags.length - VISIBLE_TAGS;
+  const name = displayName(conversation);
+  const unread = conversation.unread_count > 0;
 
   return (
     <button
@@ -43,42 +40,43 @@ export function ConversationRow({ conversation, selected, onSelect }: Conversati
       )}
     >
       <span className="relative grid size-14 shrink-0 place-items-center rounded-full bg-primary-soft font-bold text-primary">
-        {initials(contact.name)}
-        <span title={PLATFORM_LABEL[channel.platform]} className="absolute -right-1 -bottom-0.5">
-          <PlatformIcon platform={channel.platform} className="size-6 rounded-full border-2 border-background" />
+        {initials(name)}
+        <span title={PLATFORM_LABEL[conversation.platform]} className="absolute -right-1 -bottom-0.5">
+          <PlatformIcon
+            platform={conversation.platform}
+            className="size-6 rounded-full border-2 border-background"
+          />
         </span>
       </span>
       <span className="grid min-w-0 flex-1 content-start gap-1">
         <span className="flex justify-between gap-2">
-          <b className="truncate text-sm font-semibold">{contact.name}</b>
-          <time className="shrink-0 text-xs text-muted-foreground">{formatTime(last_message.at)}</time>
+          <b className={cn("truncate text-sm", unread ? "font-bold" : "font-semibold")}>{name}</b>
+          {conversation.last_message_at && (
+            <time className="shrink-0 text-xs text-muted-foreground">
+              {formatTime(conversation.last_message_at)}
+            </time>
+          )}
         </span>
-        {handled_by === "ai" && (
-          <span className="flex items-center gap-1 text-xs text-primary">
-            <Sparkles className="size-3" /> AI Assistance
-          </span>
-        )}
-        {tags.length > 0 && (
-          <span className="flex flex-wrap gap-1">
-            {tags.slice(0, VISIBLE_TAGS).map((tag) => (
-              <span
-                key={tag}
-                className={cn(
-                  "rounded-full border px-2 text-[11px] leading-5 font-semibold",
-                  tagStyles[tag] ?? "border-transparent bg-muted text-muted-foreground",
-                )}
-              >
-                {tag}
-              </span>
-            ))}
-            {extraTags > 0 && (
-              <span className="rounded-full bg-primary-soft px-2 text-[11px] leading-5 font-semibold text-primary">
-                +{extraTags} more
-              </span>
-            )}
-          </span>
-        )}
-        <span className="truncate text-xs">{last_message.text}</span>
+        <span className="flex items-center justify-between gap-2">
+          {conversation.bot_enabled ? (
+            <span className="flex items-center gap-1 text-xs text-primary">
+              <Sparkles className="size-3" /> AI Assistance
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Handled by a person</span>
+          )}
+          {unread && (
+            <span
+              aria-label={`${conversation.unread_count} unread`}
+              className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground"
+            >
+              {conversation.unread_count}
+            </span>
+          )}
+        </span>
+        <span className={cn("truncate text-xs", unread && "font-semibold")}>
+          {conversation.last_message_text ?? "No messages yet"}
+        </span>
       </span>
     </button>
   );

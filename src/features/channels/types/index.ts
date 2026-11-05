@@ -33,6 +33,12 @@ export interface ChannelDetails {
   details: Record<string, unknown>;
 }
 
+export interface WebhookCheck {
+  subscribed: boolean | null; // null = couldn't be determined
+  subscribed_fields: string[];
+  detail: string | null;
+}
+
 export interface FacebookPage {
   id: string;
   name: string;
