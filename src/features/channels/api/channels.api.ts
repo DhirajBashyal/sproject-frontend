@@ -61,6 +61,10 @@ export const channelsApi = {
   connectWithToken: (platform: Platform, body: Record<string, string>) =>
     http.post<Channel>(connectPath[platform], body).then((r) => r.data),
 
+  // Not in the API yet: the backend exchanges the code, subscribes the account and saves the channel.
+  whatsappEmbeddedSignup: (body: { code: string; waba_id: string; phone_number_id: string; chatbot_id?: string }) =>
+    http.post<Channel>(`${base("whatsapp")}/embedded-signup`, body).then((r) => r.data),
+
   facebookOAuthUrl: () =>
     http.get<{ url: string; state: string }>(`${base("facebook")}/oauth/url`).then((r) => r.data),
   facebookCallback: (code: string, state: string) =>

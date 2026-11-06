@@ -1,5 +1,5 @@
 import { FileText, MessageCircleMore } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { env } from "@/config/env";
 import { toApiError } from "@/lib/axios";
 import { PlatformIcon } from "../components/PlatformIcon";
+import { WhatsAppConnectDialog } from "../components/WhatsAppConnectDialog";
 import { useAllChannels, useStartOAuth } from "../hooks/useChannels";
 import type { Platform } from "../types";
 
@@ -63,9 +64,10 @@ export function IntegrationsPage() {
   const { lists, isPending, error } = useAllChannels();
   const startOAuth = useStartOAuth();
   const widgetConfigured = Boolean(env.widgetApiKey && env.widgetChatbotId);
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false);
 
   function setup(platform: Platform) {
-    if (platform === "whatsapp") void navigate("/channels/whatsapp?connect=1");
+    if (platform === "whatsapp") setWhatsAppOpen(true);
     else startOAuth.mutate(platform);
   }
 
@@ -150,6 +152,12 @@ export function IntegrationsPage() {
           );
         })}
       </div>
+
+      <WhatsAppConnectDialog
+        open={whatsAppOpen}
+        onOpenChange={setWhatsAppOpen}
+        onManual={() => void navigate("/channels/whatsapp?connect=1")}
+      />
     </div>
   );
 }

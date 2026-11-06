@@ -7,6 +7,7 @@ import { toApiError } from "@/lib/axios";
 import { ChannelDetailsDialog } from "../components/ChannelDetailsDialog";
 import { ConnectWithTokenDialog } from "../components/ConnectWithTokenDialog";
 import { PLATFORM_LABEL, PlatformIcon } from "../components/PlatformIcon";
+import { WhatsAppConnectDialog } from "../components/WhatsAppConnectDialog";
 import { useChannels, useStartOAuth } from "../hooks/useChannels";
 import { isPlatform, type Channel, type Platform } from "../types";
 
@@ -20,6 +21,7 @@ function subtitle(channel: Channel) {
 function ChannelList({ platform }: { platform: Platform }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false);
   const channels = useChannels(platform);
   const startOAuth = useStartOAuth();
   const label = PLATFORM_LABEL[platform];
@@ -45,7 +47,12 @@ function ChannelList({ platform }: { platform: Platform }) {
         </h1>
         <div className="flex flex-wrap gap-2">
           {platform === "whatsapp" ? (
-            <Button onClick={() => setTokenDialogOpen(true)}>Connect a number</Button>
+            <>
+              <Button variant="outline" onClick={() => setTokenDialogOpen(true)}>
+                Enter details manually
+              </Button>
+              <Button onClick={() => setWhatsAppOpen(true)}>Connect WhatsApp</Button>
+            </>
           ) : (
             <>
               <Button variant="outline" onClick={() => setTokenDialogOpen(true)}>
@@ -97,6 +104,16 @@ function ChannelList({ platform }: { platform: Platform }) {
       )}
 
       <ConnectWithTokenDialog platform={platform} open={tokenDialogOpen} onOpenChange={setTokenDialogOpen} />
+      {platform === "whatsapp" && (
+        <WhatsAppConnectDialog
+          open={whatsAppOpen}
+          onOpenChange={setWhatsAppOpen}
+          onManual={() => {
+            setWhatsAppOpen(false);
+            setTokenDialogOpen(true);
+          }}
+        />
+      )}
       {selected && <ChannelDetailsDialog channel={selected} onClose={() => setSelectedId(null)} />}
     </div>
   );
