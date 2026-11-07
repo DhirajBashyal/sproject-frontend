@@ -197,28 +197,35 @@ export function ChannelDetailsDialog({ channel, onClose }: { channel: Channel; o
             {channel.platform !== "facebook" && <WebhookCheckButton channel={channel} />}
             {channel.platform === "facebook" && channel.chatbot_id && <FacebookCommentsNote />}
 
-            <form
-              className="grid gap-1.5"
-              onSubmit={(event) => {
-                event.preventDefault();
-                updateToken.mutate(token.trim(), { onSuccess: () => setToken("") });
-              }}
-            >
-              <Label htmlFor="new-token">Update access token</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="new-token"
-                  type="password"
-                  autoComplete="off"
-                  required
-                  value={token}
-                  onChange={(event) => setToken(event.target.value)}
-                />
-                <Button type="submit" variant="outline" disabled={pending}>
-                  Update
-                </Button>
-              </div>
-            </form>
+            {/* Facebook and Instagram reconnect through their login; only WhatsApp takes a pasted token. */}
+            {channel.platform !== "whatsapp" &&
+              status.data?.token_valid === false &&
+              !(channel.platform === "facebook" && channel.chatbot_id) && <LoginAgainButton platform={channel.platform} />}
+
+            {channel.platform === "whatsapp" && (
+              <form
+                className="grid gap-1.5"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  updateToken.mutate(token.trim(), { onSuccess: () => setToken("") });
+                }}
+              >
+                <Label htmlFor="new-token">Update access token</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="new-token"
+                    type="password"
+                    autoComplete="off"
+                    required
+                    value={token}
+                    onChange={(event) => setToken(event.target.value)}
+                  />
+                  <Button type="submit" variant="outline" disabled={pending}>
+                    Update
+                  </Button>
+                </div>
+              </form>
+            )}
 
             <div className="flex flex-wrap gap-2">
               {channel.is_active ? (

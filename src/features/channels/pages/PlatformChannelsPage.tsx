@@ -54,14 +54,9 @@ function ChannelList({ platform }: { platform: Platform }) {
               <Button onClick={() => setWhatsAppOpen(true)}>Connect WhatsApp</Button>
             </>
           ) : (
-            <>
-              <Button variant="outline" onClick={() => setTokenDialogOpen(true)}>
-                Use an access token
-              </Button>
-              <Button disabled={startOAuth.isPending} onClick={() => startOAuth.mutate(platform)}>
-                Connect with {platform === "facebook" ? "Facebook" : "Instagram"}
-              </Button>
-            </>
+            <Button disabled={startOAuth.isPending} onClick={() => startOAuth.mutate(platform)}>
+              Connect with {platform === "facebook" ? "Facebook" : "Instagram"}
+            </Button>
           )}
         </div>
       </div>
@@ -103,7 +98,9 @@ function ChannelList({ platform }: { platform: Platform }) {
         </ul>
       )}
 
-      <ConnectWithTokenDialog platform={platform} open={tokenDialogOpen} onOpenChange={setTokenDialogOpen} />
+      {platform === "whatsapp" && (
+        <ConnectWithTokenDialog platform={platform} open={tokenDialogOpen} onOpenChange={setTokenDialogOpen} />
+      )}
       {platform === "whatsapp" && (
         <WhatsAppConnectDialog
           open={whatsAppOpen}
