@@ -66,3 +66,42 @@ export function useMarkCommentRead() {
     onSuccess: (updated) => replaceComment(queryClient, updated),
   });
 }
+
+function removeComment(queryClient: QueryClient, removed: Comment) {
+  queryClient.setQueriesData<InfiniteData<CommentList>>({ queryKey: ["comments"] }, (data) =>
+    data
+      ? {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            total: page.items.some((item) => item.id === removed.id) ? page.total - 1 : page.total,
+            unread: page.items.some((item) => item.id === removed.id && !item.is_read) ? page.unread - 1 : page.unread,
+            items: page.items.filter((item) => item.id !== removed.id),
+          })),
+        }
+      : data,
+  );
+}
+
+/** Like, hide, delete, and edit or delete the page's reply. Meta refusing leaves the comment unchanged. */
+export function useCommentActions(comment: Comment) {
+  const queryClient = useQueryClient();
+  const onSuccess = (updated: Comment) => {
+    replaceComment(queryClient, updated);
+    // Hiding moves the comment between the "All" and "Hidden" lists.
+    if (updated.is_hidden !== comment.is_hidden) {
+      void queryClient.invalidateQueries({ queryKey: ["comments"], refetchType: "none" });
+    }
+  };
+
+  return {
+    like: useMutation({ mutationFn: (liked: boolean) => commentsApi.setLiked(comment, liked), onSuccess }),
+    hide: useMutation({ mutationFn: (hidden: boolean) => commentsApi.setHidden(comment, hidden), onSuccess }),
+    editReply: useMutation({ mutationFn: (text: string) => commentsApi.editReply(comment, text), onSuccess }),
+    deleteReply: useMutation({ mutationFn: () => commentsApi.deleteReply(comment), onSuccess }),
+    remove: useMutation({
+      mutationFn: () => commentsApi.remove(comment),
+      onSuccess: () => removeComment(queryClient, comment),
+    }),
+  };
+}

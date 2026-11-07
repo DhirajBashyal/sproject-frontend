@@ -15,10 +15,13 @@ export interface Comment {
   text: string;
   reply_status: ReplyStatus; // pending = not answered yet
   reply_text: string | null;
+  reply_external_id: string | null; // null for replies saved before reply IDs existed: can't edit or delete them
   replied_by: "bot" | "agent" | null;
   reply_error: string | null; // why Meta rejected the reply
   replied_at: string | null;
   is_read: boolean;
+  is_liked: boolean; // liked by the page (Facebook only)
+  is_hidden: boolean;
   created_at: string;
 }
 
@@ -34,6 +37,7 @@ export interface CommentFilters {
   post_id?: string;
   reply_status?: ReplyStatus;
   unread_only?: boolean;
+  hidden?: boolean; // leave out for all comments
 }
 
 export function authorName(comment: Comment) {
@@ -53,6 +57,7 @@ export const COMMENT_PLATFORM_LABEL: Record<Comment["platform"], string> = {
 /** The API has no posts endpoint, so posts are built from their comments. */
 export interface PostGroup {
   post_id: string;
+  channel_id: string;
   platform: Comment["platform"];
   channel_name: string | null;
   comments: Comment[]; // oldest first
@@ -70,6 +75,7 @@ export function groupByPost(comments: Comment[]): PostGroup[] {
   for (const comment of comments) {
     const post = posts.get(comment.post_id) ?? {
       post_id: comment.post_id,
+      channel_id: comment.channel_id,
       platform: comment.platform,
       channel_name: comment.channel_name,
       comments: [],
@@ -85,4 +91,17 @@ export function groupByPost(comments: Comment[]): PostGroup[] {
   }
   for (const post of posts.values()) post.comments.sort((a, b) => a.created_at.localeCompare(b.created_at));
   return [...posts.values()].sort((a, b) => b.latest_at.localeCompare(a.latest_at));
+}
+
+/** Live post details from Meta. */
+export interface Post {
+  id: string;
+  channel_id: string;
+  platform: Comment["platform"];
+  text: string | null;
+  image_url: string | null;
+  permalink_url: string | null;
+  created_time: string | null;
+  can_edit: boolean; // Facebook only
+  can_delete: boolean; // Facebook only
 }

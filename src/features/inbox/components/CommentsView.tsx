@@ -11,14 +11,15 @@ import { PostPanel } from "./PostPanel";
 import { PostRow } from "./PostRow";
 
 type Platform = Comment["platform"];
-type PostFilter = "all" | "unreplied";
+type PostFilter = "all" | "unreplied" | "hidden";
 
 const PLATFORMS: Platform[] = ["facebook", "instagram"];
 
 export function CommentsView({ tabs }: { tabs: ReactNode }) {
   const [platform, setPlatform] = useState<Platform>("facebook");
   const [filter, setFilter] = useState<PostFilter>("all");
-  const comments = useComments({ platform });
+  // Hidden comments live only under "Hidden".
+  const comments = useComments({ platform, hidden: filter === "hidden" });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
@@ -73,6 +74,7 @@ export function CommentsView({ tabs }: { tabs: ReactNode }) {
                 [
                   ["all", "All posts"],
                   ["unreplied", "Unreplied"],
+                  ["hidden", "Hidden"],
                 ] as const
               ).map(([id, label]) => (
                 <button
@@ -108,7 +110,9 @@ export function CommentsView({ tabs }: { tabs: ReactNode }) {
               <p className="p-3 text-sm text-muted-foreground">
                 {filter === "unreplied"
                   ? "Every comment has an answer."
-                  : `No comments on your ${COMMENT_PLATFORM_LABEL[platform]} posts yet.`}
+                  : filter === "hidden"
+                    ? "No hidden comments."
+                    : `No comments on your ${COMMENT_PLATFORM_LABEL[platform]} posts yet.`}
               </p>
             )}
             {posts.map((post) => (

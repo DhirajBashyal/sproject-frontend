@@ -1,5 +1,6 @@
 import { ImageIcon, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePost } from "../hooks/usePost";
 import type { PostGroup } from "../types/comments";
 import { formatTime } from "./ConversationRow";
 
@@ -10,7 +11,8 @@ interface PostRowProps {
 }
 
 export function PostRow({ post, selected, onSelect }: PostRowProps) {
-  // No caption from the API yet, so the newest comment stands in as a preview.
+  // Reads only what's already cached from opening the post; rows never fetch on their own.
+  const { data: details } = usePost(post, false);
   const preview = post.comments.at(-1)?.text;
 
   return (
@@ -23,13 +25,17 @@ export function PostRow({ post, selected, onSelect }: PostRowProps) {
         selected && "bg-muted",
       )}
     >
-      <span className="grid size-16 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-        <ImageIcon className="size-6" />
-      </span>
+      {details?.image_url ? (
+        <img src={details.image_url} alt="" className="size-16 shrink-0 rounded-lg bg-muted object-cover" />
+      ) : (
+        <span className="grid size-16 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+          <ImageIcon className="size-6" />
+        </span>
+      )}
       <span className="grid min-w-0 flex-1 content-center gap-1">
         <span className="flex items-center justify-between gap-2">
           <b className={cn("truncate text-sm", post.unread > 0 ? "font-bold" : "font-semibold")}>
-            Post on {post.channel_name ?? "your page"}
+            {details?.text?.split("\n")[0] || `Post on ${post.channel_name ?? "your page"}`}
           </b>
           {post.unread > 0 && <span aria-label={`${post.unread} unread`} className="size-2.5 shrink-0 rounded-full bg-primary" />}
         </span>

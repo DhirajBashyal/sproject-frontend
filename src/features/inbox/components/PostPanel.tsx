@@ -1,10 +1,11 @@
-import { ArrowLeft, ExternalLink, ImageIcon, MessageCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, ExternalLink, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlatformIcon } from "@/features/channels/components/PlatformIcon";
 import { cn } from "@/lib/utils";
+import { usePost } from "../hooks/usePost";
 import { COMMENT_PLATFORM_LABEL, needsAnswer, postUrl, type PostGroup } from "../types/comments";
 import { CommentItem } from "./CommentItem";
+import { PostCard } from "./PostCard";
 import { formatTime } from "./ConversationRow";
 
 interface PostPanelProps {
@@ -16,8 +17,9 @@ interface PostPanelProps {
 
 export function PostPanel({ post, refreshing, onRefresh, onBack }: PostPanelProps) {
   const [filter, setFilter] = useState<"all" | "needs">("all");
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const link = postUrl(post);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const details = usePost(post);
+  const link = details.data?.permalink_url ?? postUrl(post);
   const shown = filter === "needs" ? post.comments.filter(needsAnswer) : post.comments;
   const pageName = post.channel_name ?? "Your page";
 
@@ -28,14 +30,14 @@ export function PostPanel({ post, refreshing, onRefresh, onBack }: PostPanelProp
           <ArrowLeft />
         </Button>
         <div className="min-w-0 flex-1">
-          <b className="block truncate">Post on {pageName}</b>
+          <b className="block truncate">{details.data?.text?.split("\n")[0] || `Post on ${pageName}`}</b>
           <span className="block truncate text-xs text-muted-foreground">
             {COMMENT_PLATFORM_LABEL[post.platform]} · latest comment {formatTime(post.latest_at)}
           </span>
         </div>
         {link && (
           <Button variant="ghost" size="icon" asChild>
-            <a href={link} target="_blank" rel="noreferrer" aria-label="Open post on Facebook">
+            <a href={link} target="_blank" rel="noreferrer" aria-label={`Open post on ${COMMENT_PLATFORM_LABEL[post.platform]}`}>
               <ExternalLink />
             </a>
           </Button>
@@ -47,33 +49,7 @@ export function PostPanel({ post, refreshing, onRefresh, onBack }: PostPanelProp
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto grid max-w-3xl gap-6 p-4 md:p-6">
-          <article className="overflow-hidden rounded-xl border">
-            <div className="grid aspect-[16/7] place-items-center bg-muted text-muted-foreground">
-              <span className="grid justify-items-center gap-2 text-center text-xs">
-                <ImageIcon className="size-8" />
-                Post preview isn't available yet
-              </span>
-            </div>
-            <div className="grid gap-3 p-4">
-              <div className="flex items-center gap-3">
-                <PlatformIcon platform={post.platform} className="size-10 rounded-full" />
-                <div className="min-w-0">
-                  <b className="block truncate">{pageName}</b>
-                  <span className="text-xs text-muted-foreground">{COMMENT_PLATFORM_LABEL[post.platform]} post</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 border-t pt-3 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <MessageCircle className="size-4" /> {post.comments.length} comments
-                </span>
-                {link && (
-                  <a href={link} target="_blank" rel="noreferrer" className="text-primary underline">
-                    View on Facebook
-                  </a>
-                )}
-              </div>
-            </div>
-          </article>
+          <PostCard post={post} onDeleted={onBack} />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-semibold">Comments</h2>
@@ -103,7 +79,7 @@ export function PostPanel({ post, refreshing, onRefresh, onBack }: PostPanelProp
 
           {shown.length === 0 ? (
             <p className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
-              Every comment on this post has an answer.
+              {post.comments.length === 0 ? "No comments left on this post." : "Every comment on this post has an answer."}
             </p>
           ) : (
             <ol className="grid gap-6 rounded-xl border p-4 md:p-5">
@@ -111,8 +87,8 @@ export function PostPanel({ post, refreshing, onRefresh, onBack }: PostPanelProp
                 <CommentItem
                   key={comment.id}
                   comment={comment}
-                  replying={replyingTo === comment.id}
-                  onReplyToggle={(open) => setReplyingTo(open ? comment.id : null)}
+                  active={activeId === comment.id}
+                  onActivate={(open) => setActiveId(open ? comment.id : null)}
                 />
               ))}
             </ol>
