@@ -25,69 +25,87 @@ interface WhatsAppConnectDialogProps {
   onManual: () => void;
 }
 
+const PIN_PATTERN = /^\d{6}$/;
+
 export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsAppConnectDialogProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [setup, setSetup] = useState<{ sdk: FacebookSdk; config: EmbeddedSignupConfig } | null>(null);
-  const [unconfigured, setUnconfigured] = useState(false);
-  const [connected, setConnected] = useState<Channel | null>(null);
+  const [unavailable, setUnavailable] = useState<string | null>(null);
   const [chatbotId, setChatbotId] = useState("");
+  const [pin, setPin] = useState("");
+  const [connected, setConnected] = useState<Channel | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Load the SDK when the dialog opens, so the click can open Meta's popup without being blocked.
+  // Load the config and SDK when the dialog opens, so the click can open Meta's popup without being blocked.
   useEffect(() => {
-    if (!open || setup) return;
+    if (!open || setup || unavailable) return;
     let cancelled = false;
     getEmbeddedSignupConfig()
-      .then(async (config) => {
-        if (!config) return !cancelled && setUnconfigured(true);
-        const sdk = await loadFacebookSdk(config.app_id, config.graph_api_version);
-        if (!cancelled) setSetup({ sdk, config });
+      .then(async (result) => {
+        if ("unavailable" in result) return !cancelled && setUnavailable(result.unavailable);
+        const sdk = await loadFacebookSdk(result.config.app_id, result.config.graph_api_version);
+        if (!cancelled) setSetup({ sdk, config: result.config });
       })
       .catch((loadError: Error) => !cancelled && setError(loadError.message));
     return () => {
       cancelled = true;
     };
-  }, [open, setup]);
+  }, [open, setup, unavailable]);
 
-  async function finish() {
+  function close() {
     onOpenChange(false);
     setConnected(null);
+    setPin("");
+    setError(null);
+    setNotice(null);
+  }
+
+  async function finish() {
+    close();
     await navigate("/channels/whatsapp");
   }
 
+  const pinInvalid = pin !== "" && !PIN_PATTERN.test(pin);
+
   function connect() {
-    if (!setup) return;
+    if (!setup || pinInvalid) return;
     setBusy(true);
     setError(null);
     setNotice(null);
     runEmbeddedSignup(setup.sdk, setup.config.config_id)
       .then((result) =>
-        channelsApi.whatsappEmbeddedSignup({ ...result, ...(chatbotId.trim() && { chatbot_id: chatbotId.trim() }) }),
+        channelsApi.whatsappEmbeddedSignup({
+          ...result,
+          ...(chatbotId.trim() && { chatbot_id: chatbotId.trim() }),
+          ...(pin && { pin }),
+        }),
       )
       .then(async (channel) => {
         upsertChannels(queryClient, [channel]);
-        // Connected, but Meta refused to register the number. Keep the dialog open to explain.
-        if (channel.config.register_error) setConnected(channel);
-        else await finish();
+        // Stay open to show a registration problem, or the PIN the owner must keep.
+        if (channel.config.register_error || channel.config.two_step_pin) {
+          setConnected(channel);
+          setPin("");
+        } else {
+          await finish();
+        }
       })
       .catch((caught: unknown) => {
         if (caught instanceof SignupCancelledError) return setNotice(caught.message);
         const apiError = toApiError(caught);
-        if (apiError.status === 404 || apiError.status === 405) {
-          return setError(
-            "Meta approved the number, but the backend can't finish WhatsApp signup yet. Enter the details manually for now.",
-          );
-        }
         setError(apiError.status === 0 && caught instanceof Error ? caught.message : apiError.detail);
       })
       .finally(() => setBusy(false));
   }
 
+  const registerError = connected?.config.register_error;
+  const keptPin = connected?.config.two_step_pin;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
       <DialogContent className="max-w-lg gap-0 p-0">
         <div className="grid gap-3 border-b p-6">
           <div className="flex items-center gap-3">
@@ -98,18 +116,27 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
         </div>
 
         <div className="grid gap-4 p-6">
-          {connected ? (
+          {connected && keptPin && !registerError ? (
             <>
-              <Alert variant="warning">
-                {connected.name} is connected, but Meta couldn't register the number: {connected.config.register_error}.
-                This usually means the number already has a different two-step verification PIN.
+              <Alert variant="info">
+                {connected.name} is connected. Its two-step verification PIN is{" "}
+                <b className="font-mono tracking-widest">{keptPin}</b>. Save it somewhere safe: you'll need it to
+                move this number, and it won't be shown again.
               </Alert>
               <Button className="justify-self-center" onClick={() => void finish()}>
-                Done
+                I've saved the PIN
               </Button>
             </>
-          ) : !unconfigured ? (
+          ) : unavailable ? (
+            <Alert variant="warning">{unavailable} Enter the number's details manually instead.</Alert>
+          ) : (
             <>
+              {registerError && connected && (
+                <Alert variant="warning">
+                  {connected.name} is connected, but Meta couldn't register the number for sending: {registerError}.
+                  If this number already has a two-step verification PIN, enter it and connect again.
+                </Alert>
+              )}
               <FormField
                 id="whatsapp-chatbot"
                 label="Chatbot ID (optional)"
@@ -118,15 +145,30 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
                 value={chatbotId}
                 onChange={(event) => setChatbotId(event.target.value)}
               />
-              <Button className="h-11 justify-self-center px-12" disabled={!setup || busy} onClick={connect}>
-                {busy ? "Connecting…" : setup ? "Connect WhatsApp" : "Loading…"}
-              </Button>
+              {registerError && (
+                <FormField
+                  id="whatsapp-pin"
+                  label="Two-step verification PIN"
+                  hint="The 6-digit PIN already set for this number."
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={6}
+                  value={pin}
+                  error={pinInvalid ? "Enter exactly 6 digits." : undefined}
+                  onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))}
+                />
+              )}
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button className="h-11 px-12" disabled={!setup || busy || pinInvalid} onClick={connect}>
+                  {busy ? "Connecting…" : !setup ? "Loading…" : registerError ? "Connect again" : "Connect WhatsApp"}
+                </Button>
+                {registerError && (
+                  <Button variant="outline" className="h-11" onClick={() => void finish()}>
+                    Done
+                  </Button>
+                )}
+              </div>
             </>
-          ) : (
-            <Alert variant="warning">
-              Connecting through Meta isn't set up. Add WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID to the backend, or
-              VITE_FACEBOOK_APP_ID and VITE_WHATSAPP_CONFIG_ID to this app's env file.
-            </Alert>
           )}
 
           {notice && <Alert variant="info">{notice}</Alert>}
@@ -136,9 +178,11 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
             <Info className="mt-0.5 size-5 shrink-0" />
             Your WhatsApp number must use a WhatsApp Business account before it can be connected.
           </p>
-          <Button variant="ghost" size="sm" className="justify-self-center" onClick={onManual}>
-            Enter details manually instead
-          </Button>
+          {!connected && (
+            <Button variant={unavailable ? "default" : "ghost"} size="sm" className="justify-self-center" onClick={onManual}>
+              Enter details manually instead
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

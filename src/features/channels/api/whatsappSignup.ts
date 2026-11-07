@@ -1,5 +1,4 @@
-import { env } from "@/config/env";
-import { http } from "@/lib/axios";
+import { http, toApiError } from "@/lib/axios";
 import type { FacebookSdk } from "@/lib/facebookSdk";
 
 export interface EmbeddedSignupConfig {
@@ -8,19 +7,19 @@ export interface EmbeddedSignupConfig {
   graph_api_version: string; // e.g. "v21.0"
 }
 
-// Used when the backend route below isn't deployed yet.
-const envConfig: EmbeddedSignupConfig | null =
-  env.facebookAppId && env.whatsappConfigId
-    ? { app_id: env.facebookAppId, config_id: env.whatsappConfigId, graph_api_version: "v21.0" }
-    : null;
+export type SignupSetup = { config: EmbeddedSignupConfig } | { unavailable: string };
 
-/** The backend's settings win, so the IDs live in one place. Falls back to the env file. */
-export async function getEmbeddedSignupConfig(): Promise<EmbeddedSignupConfig | null> {
+/** The IDs come from the backend, so changing the Meta configuration doesn't need a frontend deploy. */
+export async function getEmbeddedSignupConfig(): Promise<SignupSetup> {
   try {
     const { data } = await http.get<EmbeddedSignupConfig>("/api/channels/whatsapp/embedded-signup/config");
-    return data;
-  } catch {
-    return envConfig;
+    return { config: data };
+  } catch (error) {
+    const apiError = toApiError(error);
+    if (apiError.status === 503 || apiError.status === 404) {
+      return { unavailable: "Connecting through Meta isn't set up on the server yet." };
+    }
+    throw apiError;
   }
 }
 

@@ -5,8 +5,6 @@ const schema = z.object({
   VITE_API_BASE_URL: z.url(),
   VITE_WIDGET_API_KEY: z.string().default(""),
   VITE_WIDGET_CHATBOT_ID: z.string().default(""),
-  VITE_FACEBOOK_APP_ID: z.string().default(""),
-  VITE_WHATSAPP_CONFIG_ID: z.string().default(""),
 });
 
 const parsed = schema.safeParse(import.meta.env);
@@ -20,6 +18,4 @@ export const env = {
   apiBaseUrl: parsed.data.VITE_API_BASE_URL.replace(/\/$/, ""),
   widgetApiKey: parsed.data.VITE_WIDGET_API_KEY,
   widgetChatbotId: parsed.data.VITE_WIDGET_CHATBOT_ID,
-  facebookAppId: parsed.data.VITE_FACEBOOK_APP_ID,
-  whatsappConfigId: parsed.data.VITE_WHATSAPP_CONFIG_ID,
 };

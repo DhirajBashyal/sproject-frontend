@@ -21,8 +21,6 @@ Edit `.env.development` for local work and `.env.production` for builds. Every `
 | `VITE_API_BASE_URL` | Backend URL, required |
 | `VITE_WIDGET_API_KEY` | Widget access key for the preview |
 | `VITE_WIDGET_CHATBOT_ID` | Chatbot UUID for the preview |
-| `VITE_FACEBOOK_APP_ID` | Facebook app ID, used to open the WhatsApp signup popup |
-| `VITE_WHATSAPP_CONFIG_ID` | Facebook Login for Business configuration ID for WhatsApp Embedded Signup |
 
 Restart the dev server after changing these values.
 
@@ -40,7 +38,8 @@ Restart the dev server after changing these values.
 
 - **Inbox:** the API has no live updates, so the inbox refreshes the conversation list every 15 seconds while the tab is visible, and once a minute after a rate-limit error.
 - **Chatbots:** the API can't list chatbots, so connect forms ask for a chatbot ID.
-- **WhatsApp signup:** the "Connect WhatsApp" popup reads its IDs from `GET /api/channels/whatsapp/embedded-signup/config`, falling back to the `VITE_` values, and sends the result to `POST /api/channels/whatsapp/embedded-signup`.
+- **WhatsApp signup:** the "Connect WhatsApp" popup reads its IDs from `GET /api/channels/whatsapp/embedded-signup/config` and sends the result to `POST /api/channels/whatsapp/embedded-signup`. If the backend hasn't set it up, the dialog offers the manual form instead.
+- **Comments:** the Inbox's Comments tab lists comments from `GET /api/inbox/comments`, each with one reply (the AI's, or the latest one sent from the dashboard). Channels connected before comment replies existed need to log in with Facebook or Instagram again.
 - **Widget switch:** the API has no on/off route, so the switch on the Integrations page is disabled.
 - **OAuth:** Meta redirects to the URI configured on the backend (`FACEBOOK_REDIRECT_URI`), currently `https://sproject-frontend.vercel.app/social-media-integration/facebook`. Don't rename `/social-media-integration/facebook` or `/social-media-integration/instagram`.
 - **Vercel:** `vercel.json` sends every path to `index.html`, so the OAuth redirect pages load instead of returning 404.

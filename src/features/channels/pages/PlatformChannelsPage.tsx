@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toApiError } from "@/lib/axios";
 import { ChannelDetailsDialog } from "../components/ChannelDetailsDialog";
 import { ConnectWithTokenDialog } from "../components/ConnectWithTokenDialog";
-import { PLATFORM_LABEL, PlatformIcon } from "../components/PlatformIcon";
+import { autoReplyLabel, PLATFORM_LABEL, PlatformIcon } from "../components/PlatformIcon";
 import { WhatsAppConnectDialog } from "../components/WhatsAppConnectDialog";
 import { useChannels, useStartOAuth } from "../hooks/useChannels";
 import { isPlatform, type Channel, type Platform } from "../types";
@@ -14,7 +14,7 @@ import { isPlatform, type Channel, type Platform } from "../types";
 function subtitle(channel: Channel) {
   const label =
     channel.config.category ?? channel.config.account_type ?? channel.config.display_phone_number;
-  const replies = channel.chatbot_id ? "Auto-replies on" : "Auto-replies off";
+  const replies = autoReplyLabel(channel.platform, channel.chatbot_id);
   return label ? `${label} · ${replies}` : replies;
 }
 

@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toApiError } from "@/lib/axios";
 import { channelsApi } from "../api/channels.api";
-import { useChannelActions, useChannelStatus } from "../hooks/useChannels";
+import { useChannelActions, useChannelStatus, useStartOAuth } from "../hooks/useChannels";
 import type { Channel } from "../types";
-import { PLATFORM_LABEL } from "./PlatformIcon";
+import { autoReplyLabel, PLATFORM_LABEL } from "./PlatformIcon";
 
 const DAY_MS = 86_400_000;
 
@@ -45,6 +45,31 @@ function ProfileData({ channel }: { channel: Channel }) {
   );
 }
 
+function LoginAgainButton({ platform }: { platform: "facebook" | "instagram" }) {
+  const startOAuth = useStartOAuth();
+  return (
+    <>
+      <Button size="sm" disabled={startOAuth.isPending} onClick={() => startOAuth.mutate(platform)}>
+        Log in with {platform === "facebook" ? "Facebook" : "Instagram"} again
+      </Button>
+      {startOAuth.error && <Alert>{toApiError(startOAuth.error).detail}</Alert>}
+    </>
+  );
+}
+
+// Reconnect reuses the old token, so only a fresh login adds the comment permissions.
+function FacebookCommentsNote() {
+  return (
+    <div className="grid gap-2 rounded-md bg-muted p-3 text-sm">
+      <p>
+        Pages connected before comment replies were added need to log in with Facebook again before the AI can
+        reply to comments. Reconnect doesn't add the new permissions.
+      </p>
+      <LoginAgainButton platform="facebook" />
+    </div>
+  );
+}
+
 function WebhookCheckButton({ channel }: { channel: Channel }) {
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: ["webhook-check", channel.platform, channel.external_id],
@@ -55,11 +80,27 @@ function WebhookCheckButton({ channel }: { channel: Channel }) {
   return (
     <div className="grid gap-2">
       <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
-        {isFetching ? "Checking…" : "Check message delivery"}
+        {isFetching
+          ? "Checking…"
+          : channel.platform === "instagram"
+            ? "Check message and comment delivery"
+            : "Check message delivery"}
       </Button>
       {error && <Alert>{toApiError(error).detail}</Alert>}
       {data &&
-        (data.subscribed ? (
+        // Instagram accounts connected before comment replies only have "messages".
+        (channel.platform === "instagram" &&
+        data.subscribed === false &&
+        data.subscribed_fields.includes("messages") &&
+        !data.subscribed_fields.includes("comments") ? (
+          <>
+            <Alert variant="warning">
+              Messages are working, but comment replies need the new Instagram permission. Log in with Instagram
+              again to turn them on.
+            </Alert>
+            <LoginAgainButton platform="instagram" />
+          </>
+        ) : data.subscribed ? (
           <Alert variant="info">Receiving messages. Subscribed to: {data.subscribed_fields.join(", ")}.</Alert>
         ) : (
           <Alert variant="warning">
@@ -135,7 +176,9 @@ export function ChannelDetailsDialog({ channel, onClose }: { channel: Channel; o
                 <Badge variant="warning">Couldn't check</Badge>
               )}
               <span>Auto-replies</span>
-              {channel.chatbot_id ? <Badge variant="success">On</Badge> : <Badge>Off</Badge>}
+              <Badge variant={channel.chatbot_id ? "success" : "neutral"}>
+                {autoReplyLabel(channel.platform, channel.chatbot_id)}
+              </Badge>
             </div>
 
             {!channel.is_active && (
@@ -152,6 +195,7 @@ export function ChannelDetailsDialog({ channel, onClose }: { channel: Channel; o
 
             <ProfileData channel={channel} />
             {channel.platform !== "facebook" && <WebhookCheckButton channel={channel} />}
+            {channel.platform === "facebook" && channel.chatbot_id && <FacebookCommentsNote />}
 
             <form
               className="grid gap-1.5"

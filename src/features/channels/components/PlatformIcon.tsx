@@ -1,6 +1,12 @@
 import { cn } from "@/lib/utils";
 import type { Platform } from "../types";
 
+/** WhatsApp has no comments, so its bot only answers messages. */
+export function autoReplyLabel(platform: Platform, chatbotId: string | null) {
+  if (!chatbotId) return "Auto-replies off";
+  return platform === "whatsapp" ? "AI replies to messages" : "AI replies to messages and comments";
+}
+
 export const PLATFORM_LABEL: Record<Platform, string> = {
   facebook: "Messenger",
   instagram: "Instagram",
