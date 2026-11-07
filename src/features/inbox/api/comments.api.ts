@@ -5,7 +5,8 @@ import { sampleComments } from "./comments.sample";
 const base = "/api/inbox/comments";
 const commentPath = (id: string) => `${base}/${encodeURIComponent(id)}`;
 
-export const COMMENT_PAGE_SIZE = 20;
+// Comments are grouped into posts on the client, so fetch large pages.
+export const COMMENT_PAGE_SIZE = 100;
 export const COMMENT_REPLY_MAX = 2000;
 
 const isSample = (comment: Comment) => comment.id.startsWith("sample-");
