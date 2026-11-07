@@ -16,8 +16,12 @@ export async function getEmbeddedSignupConfig(): Promise<SignupSetup> {
     return { config: data };
   } catch (error) {
     const apiError = toApiError(error);
-    if (apiError.status === 503 || apiError.status === 404) {
+    if (apiError.status === 404) {
       return { unavailable: "Connecting through Meta isn't set up on the server yet." };
+    }
+    if (apiError.status === 503) {
+      // The backend says what's missing, for example the configuration ID.
+      return { unavailable: `Connecting through Meta isn't set up on the server: ${apiError.detail}.` };
     }
     throw apiError;
   }
