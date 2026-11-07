@@ -1,4 +1,4 @@
-# Social Inbox Frontend
+# NepaEducation Frontend
 
 React 19 dashboard for connecting Facebook, Instagram and WhatsApp channels, replying to customer conversations in one inbox, and previewing the chat widget.
 

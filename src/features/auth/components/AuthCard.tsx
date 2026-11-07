@@ -8,7 +8,7 @@ export function AuthCard({ title, children }: { title: string; children: ReactNo
       <Card className="grid w-full max-w-sm gap-5">
         <title>{`${title} · ${env.appName}`}</title>
         <div className="flex items-center gap-2 font-bold">
-          <img src="/logo.svg" alt="" className="size-7" />
+          <img src="/logo.png" alt="" className="size-7 object-contain" />
           {env.appName}
         </div>
         <h1 className="text-xl font-bold">{title}</h1>

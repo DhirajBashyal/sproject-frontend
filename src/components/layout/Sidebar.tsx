@@ -30,7 +30,7 @@ export function Sidebar() {
         )}
       >
         <div className="mb-6 flex items-center gap-2 px-2 font-bold">
-          <img src="/logo.svg" alt="" className="size-7" />
+          <img src="/logo.png" alt="" className="size-7 object-contain" />
           {env.appName}
         </div>
         <nav className="grid gap-1" aria-label="Main">

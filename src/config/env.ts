@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const schema = z.object({
-  VITE_APP_NAME: z.string().min(1).default("Social Inbox"),
+  VITE_APP_NAME: z.string().min(1).default("NepaEducation"),
   VITE_API_BASE_URL: z.url(),
   VITE_WIDGET_API_KEY: z.string().default(""),
   VITE_WIDGET_CHATBOT_ID: z.string().default(""),
