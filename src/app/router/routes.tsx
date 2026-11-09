@@ -32,6 +32,12 @@ export const routes: RouteObject[] = [
             }),
           },
           {
+            path: "/posts/new",
+            lazy: async () => ({
+              Component: (await import("@/features/posts/pages/CreatePostPage")).CreatePostPage,
+            }),
+          },
+          {
             path: "/channels",
             lazy: async () => ({
               Component: (await import("@/features/channels/pages/IntegrationsPage")).IntegrationsPage,

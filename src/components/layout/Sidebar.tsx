@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessagesSquare, Share2 } from "lucide-react";
+import { LayoutDashboard, MessagesSquare, Share2, SquarePen } from "lucide-react";
 import { NavLink } from "react-router";
 import { env } from "@/config/env";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,7 @@ import { useUiStore } from "@/stores/ui.store";
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/inbox", label: "Inbox", icon: MessagesSquare },
+  { to: "/posts/new", label: "Create post", icon: SquarePen },
   { to: "/channels", label: "Social Media", icon: Share2 },
 ];
 
