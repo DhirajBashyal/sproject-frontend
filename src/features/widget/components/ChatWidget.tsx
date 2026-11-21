@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toApiError } from "@/lib/axios";
+import { toastError } from "@/lib/toast";
 import { widgetApi } from "../api/widget.api";
 import type { ChatTurn, WidgetSettings } from "../types";
 
@@ -31,6 +32,7 @@ export function ChatWidget({ settings }: { settings: WidgetSettings }) {
     } catch (caught) {
       setDraft(text);
       setError(toApiError(caught).detail);
+      toastError(caught, "The chatbot didn't answer");
     } finally {
       setWaiting(false);
     }

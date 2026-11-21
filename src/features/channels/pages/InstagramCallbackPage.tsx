@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { channelsApi } from "../api/channels.api";
 import { CallbackCard, CallbackFailure, CallbackShell } from "../components/CallbackShell";
 import { upsertChannels } from "../hooks/useChannels";
+import { toast } from "@/lib/toast";
 import type { Channel } from "../types";
 
 // `state` works once and StrictMode renders twice, so the request is keyed outside React.
@@ -16,6 +17,7 @@ function ConnectResult({ code, state }: { code: string; state: string }) {
   if (!connection) {
     connection = channelsApi.instagramConnect(code, state).then((channel) => {
       upsertChannels(queryClient, [channel]);
+      toast.success(`@${channel.name} connected`);
       return channel;
     });
     connections.set(state, connection);

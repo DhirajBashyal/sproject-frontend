@@ -67,6 +67,7 @@ export function useMarkRead() {
   return useMutation({
     mutationFn: inboxApi.markRead,
     onSuccess: (updated) => patchConversation(queryClient, updated.id, () => updated),
+    meta: { errorToast: false }, // happens in the background; the next refresh tries again
   });
 }
 
@@ -74,6 +75,16 @@ export function useUpdateConversation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (changes: Parameters<typeof inboxApi.update>[1]) => inboxApi.update(id, changes),
+    meta: {
+      successToast: (_data, variables) => {
+        const changes = variables as Parameters<typeof inboxApi.update>[1];
+        if (changes.status === "closed") return "Conversation closed";
+        if (changes.status === "open") return "Conversation reopened";
+        if (changes.bot_enabled === false) return "You've taken over. The AI won't reply here.";
+        if (changes.bot_enabled === true) return "AI replies are back on for this conversation";
+        return null;
+      },
+    },
     onSuccess: (updated) => {
       patchConversation(queryClient, id, () => updated);
       // The conversation may now belong in a different status filter.

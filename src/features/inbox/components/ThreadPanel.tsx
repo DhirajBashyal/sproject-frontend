@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MAX_TEXT } from "@/features/channels/api/channels.api";
 import { PLATFORM_LABEL } from "@/features/channels/components/PlatformIcon";
 import { toApiError } from "@/lib/axios";
+import { toastError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { inboxApi } from "../api/inbox.api";
 import { addSentMessage, refreshMessages, useMessages, useUpdateConversation } from "../hooks/useInbox";
@@ -106,6 +107,7 @@ export function ThreadPanel({ conversation, onBack }: { conversation: Conversati
     } catch (caught) {
       setDraft(text); // give the failed message back to the agent
       setError(toApiError(caught).detail);
+      toastError(caught, "Message not sent");
       // A rejected reply is still saved as failed, so show it in the thread.
       await refreshMessages(queryClient, conversation.id);
     }

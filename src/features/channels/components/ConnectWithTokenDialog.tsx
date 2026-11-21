@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { toApiError } from "@/lib/axios";
+import { toast } from "@/lib/toast";
 import { channelsApi } from "../api/channels.api";
 import { upsertChannels } from "../hooks/useChannels";
 import type { Platform } from "../types";
@@ -69,11 +70,14 @@ export function ConnectWithTokenDialog({ platform, open, onOpenChange }: Connect
         }),
       );
       try {
-        upsertChannels(queryClient, [await channelsApi.connectWithToken(platform, body)]);
+        const channel = await channelsApi.connectWithToken(platform, body);
+        upsertChannels(queryClient, [channel]);
+        toast.success(`${channel.name} connected`);
         onOpenChange(false);
         return {};
       } catch (error) {
         const apiError = toApiError(error);
+        toast.error("Couldn't connect", { description: apiError.detail });
         // React resets the form after an action, so keep what was typed, except the token.
         const { access_token: _token, ...values } = body;
         return { error: apiError.detail, fields: apiError.fieldErrors, values };

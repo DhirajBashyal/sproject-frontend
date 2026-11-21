@@ -54,6 +54,7 @@ export function useReplyToComment(comment: Comment) {
   return useMutation({
     mutationFn: (text: string) => commentsApi.reply(comment, text),
     onSuccess: (updated) => replaceComment(queryClient, updated),
+    meta: { successToast: "Reply posted" },
     // A rejected reply is saved as failed, so reload to show the reason.
     onError: () => queryClient.invalidateQueries({ queryKey: ["comments"] }),
   });
@@ -64,6 +65,7 @@ export function useMarkCommentRead() {
   return useMutation({
     mutationFn: commentsApi.markRead,
     onSuccess: (updated) => replaceComment(queryClient, updated),
+    meta: { errorToast: false }, // happens in the background
   });
 }
 
@@ -95,12 +97,29 @@ export function useCommentActions(comment: Comment) {
   };
 
   return {
-    like: useMutation({ mutationFn: (liked: boolean) => commentsApi.setLiked(comment, liked), onSuccess }),
-    hide: useMutation({ mutationFn: (hidden: boolean) => commentsApi.setHidden(comment, hidden), onSuccess }),
-    editReply: useMutation({ mutationFn: (text: string) => commentsApi.editReply(comment, text), onSuccess }),
-    deleteReply: useMutation({ mutationFn: () => commentsApi.deleteReply(comment), onSuccess }),
+    like: useMutation({
+      mutationFn: (liked: boolean) => commentsApi.setLiked(comment, liked),
+      onSuccess,
+      meta: { successToast: (_data, liked) => (liked ? "Comment liked" : "Like removed") },
+    }),
+    hide: useMutation({
+      mutationFn: (hidden: boolean) => commentsApi.setHidden(comment, hidden),
+      onSuccess,
+      meta: { successToast: (_data, hidden) => (hidden ? "Comment hidden" : "Comment visible again") },
+    }),
+    editReply: useMutation({
+      mutationFn: (text: string) => commentsApi.editReply(comment, text),
+      onSuccess,
+      meta: { successToast: "Reply updated" },
+    }),
+    deleteReply: useMutation({
+      mutationFn: () => commentsApi.deleteReply(comment),
+      onSuccess,
+      meta: { successToast: "Reply deleted. The comment needs an answer again." },
+    }),
     remove: useMutation({
       mutationFn: () => commentsApi.remove(comment),
+      meta: { successToast: "Comment deleted" },
       onSuccess: () => removeComment(queryClient, comment),
     }),
   };

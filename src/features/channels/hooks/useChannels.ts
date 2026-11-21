@@ -57,14 +57,24 @@ export function useChannelActions(channel: Channel) {
   };
 
   return {
-    reconnect: useMutation({ mutationFn: () => channelsApi.reconnect(channel), onSuccess: onChannel }),
-    disconnect: useMutation({ mutationFn: () => channelsApi.disconnect(channel), onSuccess: onChannel }),
+    reconnect: useMutation({
+      mutationFn: () => channelsApi.reconnect(channel),
+      onSuccess: onChannel,
+      meta: { successToast: `${channel.name} reconnected` },
+    }),
+    disconnect: useMutation({
+      mutationFn: () => channelsApi.disconnect(channel),
+      onSuccess: onChannel,
+      meta: { successToast: `${channel.name} disconnected. Auto-replies are off.` },
+    }),
     updateToken: useMutation({
       mutationFn: (token: string) => channelsApi.updateToken(channel, token),
       onSuccess: onChannel,
+      meta: { successToast: "Access token updated" },
     }),
     remove: useMutation({
       mutationFn: () => channelsApi.remove(channel),
+      meta: { successToast: `${channel.name} removed` },
       onSuccess: () =>
         queryClient.setQueryData<Channel[]>(listKey(channel.platform), (current) =>
           current?.filter((item) => item.external_id !== channel.external_id),

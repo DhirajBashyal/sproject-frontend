@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { FormField } from "@/components/ui/form-field";
 import { toApiError } from "@/lib/axios";
+import { toast } from "@/lib/toast";
 import { loadFacebookSdk, type FacebookSdk } from "@/lib/facebookSdk";
 import { channelsApi } from "../api/channels.api";
 import {
@@ -85,6 +86,15 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
       )
       .then(async (channel) => {
         upsertChannels(queryClient, [channel]);
+        if (channel.config.register_error) {
+          toast.warning(`${channel.name} connected, but not registered for sending`, {
+            description: channel.config.register_error,
+          });
+        } else {
+          toast.success(`${channel.name} connected`, {
+            description: channel.config.two_step_pin ? "Save the number's PIN shown in the dialog." : undefined,
+          });
+        }
         // Stay open to show a registration problem, or the PIN the owner must keep.
         if (channel.config.register_error || channel.config.two_step_pin) {
           setConnected(channel);
@@ -94,9 +104,14 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
         }
       })
       .catch((caught: unknown) => {
-        if (caught instanceof SignupCancelledError) return setNotice(caught.message);
+        if (caught instanceof SignupCancelledError) {
+          toast.info(caught.message);
+          return setNotice(caught.message);
+        }
         const apiError = toApiError(caught);
-        setError(apiError.status === 0 && caught instanceof Error ? caught.message : apiError.detail);
+        const message = apiError.status === 0 && caught instanceof Error ? caught.message : apiError.detail;
+        toast.error("WhatsApp wasn't connected", { description: message });
+        setError(message);
       })
       .finally(() => setBusy(false));
   }

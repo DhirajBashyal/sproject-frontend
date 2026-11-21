@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "sonner";
 import { env } from "@/config/env";
 import { readStoredTokens, useAuthStore } from "@/stores/auth.store";
 import type { TokenPair } from "@/types/api.types";
@@ -27,6 +28,7 @@ async function runRefresh(rejectedToken: string) {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       useAuthStore.getState().setTokens(null);
+      toast.error("Your session has ended", { id: "session-ended", description: "Sign in again to continue." });
     }
     throw error;
   }

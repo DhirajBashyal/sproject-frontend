@@ -5,6 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { toApiError } from "@/lib/axios";
+import { toastError, toast } from "@/lib/toast";
 import { channelsApi } from "../api/channels.api";
 import { CallbackCard, CallbackFailure, CallbackShell } from "../components/CallbackShell";
 import { upsertChannels } from "../hooks/useChannels";
@@ -40,10 +41,15 @@ function PagePicker({ code, state }: { code: string; state: string }) {
       const chatbotId = String(form.get("chatbot_id")).trim() || undefined;
       if (pageIds.length === 0) return { error: "Choose at least one page.", chatbotId };
       try {
-        upsertChannels(queryClient, await channelsApi.facebookConnectPages(pageIds, chatbotId));
+        const connected = await channelsApi.facebookConnectPages(pageIds, chatbotId);
+        upsertChannels(queryClient, connected);
+        toast.success(
+          connected.length === 1 ? `${connected[0]?.name ?? "Page"} connected` : `${connected.length} Pages connected`,
+        );
         await navigate("/channels/facebook", { replace: true });
         return {};
       } catch (error) {
+        toastError(error, "Couldn't connect the Pages");
         return { error: toApiError(error).detail, pageIds, chatbotId };
       }
     },

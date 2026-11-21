@@ -5,6 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { toApiError } from "@/lib/axios";
+import { toast } from "@/lib/toast";
 import { useAuthStore } from "@/stores/auth.store";
 import { authApi } from "../api/auth.api";
 import { AuthCard } from "../components/AuthCard";
@@ -35,10 +36,12 @@ export function LoginPage() {
       }
       try {
         useAuthStore.getState().setTokens(await authApi.login(parsed.data));
+        toast.success("Signed in");
         await navigate(from, { replace: true });
         return {};
       } catch (error) {
         const apiError = toApiError(error);
+        if (apiError.issues.length === 0) toast.error("Couldn't sign in", { description: apiError.detail });
         return { email, error: apiError.detail, fields: apiError.fieldErrors };
       }
     },

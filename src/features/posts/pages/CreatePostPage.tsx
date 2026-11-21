@@ -12,6 +12,7 @@ import { PlatformIcon } from "@/features/channels/components/PlatformIcon";
 import { useAllChannels } from "@/features/channels/hooks/useChannels";
 import type { Channel } from "@/features/channels/types";
 import { toApiError } from "@/lib/axios";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { postsApi } from "../api/posts.api";
 import { POST_TEXT_MAX, PROMPT_MAX, type PostPlatform, type PublishResult } from "../types";
@@ -74,8 +75,21 @@ export function CreatePostPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [imageBroken, setImageBroken] = useState(false);
 
-  const generate = useMutation({ mutationFn: postsApi.generate, onSuccess: setText });
-  const publish = useMutation({ mutationFn: postsApi.publish });
+  const generate = useMutation({
+    mutationFn: postsApi.generate,
+    onSuccess: setText,
+    meta: { successToast: "Draft ready. Check it before publishing." },
+  });
+  const publish = useMutation({
+    mutationFn: postsApi.publish,
+    onSuccess: (results) => {
+      const done = results.filter((result) => result.status === "published").length;
+      const summary = `Published to ${done} of ${results.length} ${results.length === 1 ? "channel" : "channels"}`;
+      if (done === results.length) toast.success(summary);
+      else if (done > 0) toast.warning(summary, { description: "Check the results for what failed." });
+      else toast.error("Nothing was published", { description: results[0]?.error ?? undefined });
+    },
+  });
 
   const channels: Channel[] = [...(lists.facebook ?? []), ...(lists.instagram ?? [])].filter(
     (channel) => channel.is_active,
