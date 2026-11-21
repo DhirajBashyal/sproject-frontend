@@ -87,12 +87,14 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
       .then(async (channel) => {
         upsertChannels(queryClient, [channel]);
         if (channel.config.register_error) {
-          toast.warning(`${channel.name} connected, but not registered for sending`, {
-            description: channel.config.register_error,
+          toast.warning("WhatsApp number connected with a warning", {
+            description: `${channel.name} couldn't be registered for sending: ${channel.config.register_error}`,
           });
         } else {
-          toast.success(`${channel.name} connected`, {
-            description: channel.config.two_step_pin ? "Save the number's PIN shown in the dialog." : undefined,
+          toast.success("WhatsApp number connected successfully", {
+            description: channel.config.two_step_pin
+              ? `${channel.name}. Please save the PIN shown in the dialog.`
+              : channel.name,
           });
         }
         // Stay open to show a registration problem, or the PIN the owner must keep.
@@ -105,12 +107,12 @@ export function WhatsAppConnectDialog({ open, onOpenChange, onManual }: WhatsApp
       })
       .catch((caught: unknown) => {
         if (caught instanceof SignupCancelledError) {
-          toast.info(caught.message);
+          toast.info("WhatsApp setup cancelled", { description: "You can start again at any time." });
           return setNotice(caught.message);
         }
         const apiError = toApiError(caught);
         const message = apiError.status === 0 && caught instanceof Error ? caught.message : apiError.detail;
-        toast.error("WhatsApp wasn't connected", { description: message });
+        toast.error("Unable to connect WhatsApp", { description: message });
         setError(message);
       })
       .finally(() => setBusy(false));

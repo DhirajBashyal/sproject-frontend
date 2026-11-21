@@ -17,7 +17,7 @@ function ConnectResult({ code, state }: { code: string; state: string }) {
   if (!connection) {
     connection = channelsApi.instagramConnect(code, state).then((channel) => {
       upsertChannels(queryClient, [channel]);
-      toast.success(`@${channel.name} connected`);
+      toast.success("Instagram account connected successfully", { description: `@${channel.name}` });
       return channel;
     });
     connections.set(state, connection);

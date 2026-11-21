@@ -44,12 +44,13 @@ function PagePicker({ code, state }: { code: string; state: string }) {
         const connected = await channelsApi.facebookConnectPages(pageIds, chatbotId);
         upsertChannels(queryClient, connected);
         toast.success(
-          connected.length === 1 ? `${connected[0]?.name ?? "Page"} connected` : `${connected.length} Pages connected`,
+          connected.length === 1 ? "Facebook Page connected successfully" : `${connected.length} Facebook Pages connected successfully`,
+          { description: connected.map((page) => page.name).join(", ") },
         );
         await navigate("/channels/facebook", { replace: true });
         return {};
       } catch (error) {
-        toastError(error, "Couldn't connect the Pages");
+        toastError(error, "Unable to connect the Facebook Pages");
         return { error: toApiError(error).detail, pageIds, chatbotId };
       }
     },

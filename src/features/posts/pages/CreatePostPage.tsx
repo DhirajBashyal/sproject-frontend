@@ -78,17 +78,27 @@ export function CreatePostPage() {
   const generate = useMutation({
     mutationFn: postsApi.generate,
     onSuccess: setText,
-    meta: { successToast: "Draft ready. Check it before publishing." },
+    meta: {
+      successToast: { title: "Draft generated successfully", description: "Please review it before publishing." },
+      errorTitle: "Unable to generate the draft",
+    },
   });
   const publish = useMutation({
     mutationFn: postsApi.publish,
     onSuccess: (results) => {
       const done = results.filter((result) => result.status === "published").length;
-      const summary = `Published to ${done} of ${results.length} ${results.length === 1 ? "channel" : "channels"}`;
-      if (done === results.length) toast.success(summary);
-      else if (done > 0) toast.warning(summary, { description: "Check the results for what failed." });
-      else toast.error("Nothing was published", { description: results[0]?.error ?? undefined });
+      const channels = (count: number) => `${count} ${count === 1 ? "channel" : "channels"}`;
+      if (done === results.length) {
+        toast.success("Post published successfully", { description: `Published to ${channels(done)}.` });
+      } else if (done > 0) {
+        toast.warning("Post partially published", {
+          description: `Published to ${done} of ${channels(results.length)}. See the details below.`,
+        });
+      } else {
+        toast.error("Unable to publish the post", { description: results[0]?.error ?? undefined });
+      }
     },
+    meta: { errorTitle: "Unable to publish the post" },
   });
 
   const channels: Channel[] = [...(lists.facebook ?? []), ...(lists.instagram ?? [])].filter(

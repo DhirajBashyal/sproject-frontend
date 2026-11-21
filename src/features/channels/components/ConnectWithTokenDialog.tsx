@@ -72,12 +72,12 @@ export function ConnectWithTokenDialog({ platform, open, onOpenChange }: Connect
       try {
         const channel = await channelsApi.connectWithToken(platform, body);
         upsertChannels(queryClient, [channel]);
-        toast.success(`${channel.name} connected`);
+        toast.success("Channel connected successfully", { description: channel.name });
         onOpenChange(false);
         return {};
       } catch (error) {
         const apiError = toApiError(error);
-        toast.error("Couldn't connect", { description: apiError.detail });
+        toast.error("Unable to connect the channel", { description: apiError.detail });
         // React resets the form after an action, so keep what was typed, except the token.
         const { access_token: _token, ...values } = body;
         return { error: apiError.detail, fields: apiError.fieldErrors, values };

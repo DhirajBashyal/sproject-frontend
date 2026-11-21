@@ -32,7 +32,7 @@ export function ChatWidget({ settings }: { settings: WidgetSettings }) {
     } catch (caught) {
       setDraft(text);
       setError(toApiError(caught).detail);
-      toastError(caught, "The chatbot didn't answer");
+      toastError(caught, "Unable to get a response from the chatbot");
     } finally {
       setWaiting(false);
     }

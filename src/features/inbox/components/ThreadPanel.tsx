@@ -107,7 +107,7 @@ export function ThreadPanel({ conversation, onBack }: { conversation: Conversati
     } catch (caught) {
       setDraft(text); // give the failed message back to the agent
       setError(toApiError(caught).detail);
-      toastError(caught, "Message not sent");
+      toastError(caught, "Unable to send the message");
       // A rejected reply is still saved as failed, so show it in the thread.
       await refreshMessages(queryClient, conversation.id);
     }

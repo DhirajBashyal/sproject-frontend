@@ -54,7 +54,7 @@ export function useReplyToComment(comment: Comment) {
   return useMutation({
     mutationFn: (text: string) => commentsApi.reply(comment, text),
     onSuccess: (updated) => replaceComment(queryClient, updated),
-    meta: { successToast: "Reply posted" },
+    meta: { successToast: "Reply posted successfully", errorTitle: "Unable to post the reply" },
     // A rejected reply is saved as failed, so reload to show the reason.
     onError: () => queryClient.invalidateQueries({ queryKey: ["comments"] }),
   });
@@ -100,26 +100,35 @@ export function useCommentActions(comment: Comment) {
     like: useMutation({
       mutationFn: (liked: boolean) => commentsApi.setLiked(comment, liked),
       onSuccess,
-      meta: { successToast: (_data, liked) => (liked ? "Comment liked" : "Like removed") },
+      meta: {
+        successToast: (_data, liked) => (liked ? "Comment liked successfully" : "Like removed successfully"),
+        errorTitle: "Unable to update the like",
+      },
     }),
     hide: useMutation({
       mutationFn: (hidden: boolean) => commentsApi.setHidden(comment, hidden),
       onSuccess,
-      meta: { successToast: (_data, hidden) => (hidden ? "Comment hidden" : "Comment visible again") },
+      meta: {
+        successToast: (_data, hidden) => (hidden ? "Comment hidden successfully" : "Comment unhidden successfully"),
+        errorTitle: "Unable to update the comment",
+      },
     }),
     editReply: useMutation({
       mutationFn: (text: string) => commentsApi.editReply(comment, text),
       onSuccess,
-      meta: { successToast: "Reply updated" },
+      meta: { successToast: "Reply updated successfully", errorTitle: "Unable to update the reply" },
     }),
     deleteReply: useMutation({
       mutationFn: () => commentsApi.deleteReply(comment),
       onSuccess,
-      meta: { successToast: "Reply deleted. The comment needs an answer again." },
+      meta: {
+        successToast: { title: "Reply deleted successfully", description: "The comment is marked as needing a reply." },
+        errorTitle: "Unable to delete the reply",
+      },
     }),
     remove: useMutation({
       mutationFn: () => commentsApi.remove(comment),
-      meta: { successToast: "Comment deleted" },
+      meta: { successToast: "Comment deleted successfully", errorTitle: "Unable to delete the comment" },
       onSuccess: () => removeComment(queryClient, comment),
     }),
   };

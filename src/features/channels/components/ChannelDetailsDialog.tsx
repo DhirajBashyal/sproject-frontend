@@ -80,12 +80,12 @@ function WebhookCheckButton({ channel }: { channel: Channel }) {
 
   async function check() {
     const result = await refetch();
-    if (result.error) return toastError(result.error, "Couldn't check message delivery");
+    if (result.error) return toastError(result.error, "Unable to check the webhook");
     const { data: found } = result;
     if (!found) return;
-    if (found.subscribed) toast.success("Webhook connected", { description: `Receiving: ${found.subscribed_fields.join(", ")}` });
-    else if (found.subscribed === false) toast.warning("Webhook not fully connected", { description: found.detail ?? undefined });
-    else toast.info("Couldn't confirm the webhook", { description: found.detail ?? undefined });
+    if (found.subscribed) toast.success("Webhook connected successfully", { description: `Subscribed to: ${found.subscribed_fields.join(", ")}` });
+    else if (found.subscribed === false) toast.warning("Webhook partially connected", { description: found.detail ?? "Some events aren't subscribed yet." });
+    else toast.info("Webhook status unavailable", { description: found.detail ?? "Please try again later." });
   }
 
   return (

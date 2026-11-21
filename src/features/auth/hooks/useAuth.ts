@@ -17,7 +17,7 @@ export function useLogout() {
     // Sign out locally even if the server call fails, so that failure needs no toast.
     meta: { errorToast: false },
     onSettled: () => {
-      toast.success("Signed out");
+      toast.success("Signed out successfully");
       useAuthStore.getState().setTokens(null);
       queryClient.clear();
     },

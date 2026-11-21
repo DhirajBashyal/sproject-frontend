@@ -60,21 +60,33 @@ export function useChannelActions(channel: Channel) {
     reconnect: useMutation({
       mutationFn: () => channelsApi.reconnect(channel),
       onSuccess: onChannel,
-      meta: { successToast: `${channel.name} reconnected` },
+      meta: {
+        successToast: { title: "Channel reconnected successfully", description: channel.name },
+        errorTitle: "Unable to reconnect the channel",
+      },
     }),
     disconnect: useMutation({
       mutationFn: () => channelsApi.disconnect(channel),
       onSuccess: onChannel,
-      meta: { successToast: `${channel.name} disconnected. Auto-replies are off.` },
+      meta: {
+        successToast: {
+          title: "Channel disconnected successfully",
+          description: `Auto-replies are paused for ${channel.name}.`,
+        },
+        errorTitle: "Unable to disconnect the channel",
+      },
     }),
     updateToken: useMutation({
       mutationFn: (token: string) => channelsApi.updateToken(channel, token),
       onSuccess: onChannel,
-      meta: { successToast: "Access token updated" },
+      meta: { successToast: "Access token updated successfully", errorTitle: "Unable to update the access token" },
     }),
     remove: useMutation({
       mutationFn: () => channelsApi.remove(channel),
-      meta: { successToast: `${channel.name} removed` },
+      meta: {
+        successToast: { title: "Channel removed successfully", description: channel.name },
+        errorTitle: "Unable to remove the channel",
+      },
       onSuccess: () =>
         queryClient.setQueryData<Channel[]>(listKey(channel.platform), (current) =>
           current?.filter((item) => item.external_id !== channel.external_id),
@@ -90,5 +102,6 @@ export function useStartOAuth() {
         ? (await channelsApi.facebookOAuthUrl()).url
         : (await channelsApi.instagramOAuthConfig()).auth_url,
     onSuccess: (url) => window.location.assign(url),
+    meta: { errorTitle: "Unable to start the login" },
   });
 }

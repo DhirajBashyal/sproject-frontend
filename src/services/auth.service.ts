@@ -28,7 +28,7 @@ async function runRefresh(rejectedToken: string) {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       useAuthStore.getState().setTokens(null);
-      toast.error("Your session has ended", { id: "session-ended", description: "Sign in again to continue." });
+      toast.error("Session expired", { id: "session-ended", description: "Please sign in again to continue." });
     }
     throw error;
   }

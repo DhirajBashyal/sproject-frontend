@@ -44,12 +44,14 @@ export function RegisterPage() {
         useAuthStore.getState().setTokens(
           await authApi.login({ email: parsed.data.email, password: parsed.data.password }),
         );
-        toast.success("Account created", { description: "You're signed in. Connect your first channel." });
+        toast.success("Account created successfully", {
+          description: "You're now signed in. Connect your first channel to get started.",
+        });
         await navigate("/channels", { replace: true });
         return {};
       } catch (error) {
         const apiError = toApiError(error);
-        if (apiError.issues.length === 0) toast.error("Couldn't create the account", { description: apiError.detail });
+        if (apiError.issues.length === 0) toast.error("Unable to create your account", { description: apiError.detail });
         return { name, email, error: apiError.detail, fields: apiError.fieldErrors };
       }
     },

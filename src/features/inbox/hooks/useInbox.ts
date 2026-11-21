@@ -78,12 +78,17 @@ export function useUpdateConversation(id: string) {
     meta: {
       successToast: (_data, variables) => {
         const changes = variables as Parameters<typeof inboxApi.update>[1];
-        if (changes.status === "closed") return "Conversation closed";
-        if (changes.status === "open") return "Conversation reopened";
-        if (changes.bot_enabled === false) return "You've taken over. The AI won't reply here.";
-        if (changes.bot_enabled === true) return "AI replies are back on for this conversation";
+        if (changes.status === "closed") return "Conversation closed successfully";
+        if (changes.status === "open") return "Conversation reopened successfully";
+        if (changes.bot_enabled === false) {
+          return { title: "AI replies paused", description: "You're now handling this conversation." };
+        }
+        if (changes.bot_enabled === true) {
+          return { title: "AI replies resumed", description: "The AI will reply in this conversation again." };
+        }
         return null;
       },
+      errorTitle: "Unable to update the conversation",
     },
     onSuccess: (updated) => {
       patchConversation(queryClient, id, () => updated);

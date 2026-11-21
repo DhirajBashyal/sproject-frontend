@@ -20,11 +20,14 @@ export function usePostActions(post: PostGroup) {
     update: useMutation({
       mutationFn: (text: string) => postsApi.update(post.post_id, post.channel_id, text),
       onSuccess: (updated) => queryClient.setQueryData(postKey(post), updated),
-      meta: { successToast: "Post updated" },
+      meta: { successToast: "Post updated successfully", errorTitle: "Unable to update the post" },
     }),
     remove: useMutation({
       mutationFn: () => postsApi.remove(post.post_id, post.channel_id),
-      meta: { successToast: "Post and its comments deleted" },
+      meta: {
+        successToast: { title: "Post deleted successfully", description: "Its comments were removed as well." },
+        errorTitle: "Unable to delete the post",
+      },
       onSuccess: () => {
         queryClient.removeQueries({ queryKey: postKey(post) });
         // Deleting the post deletes its comments too.

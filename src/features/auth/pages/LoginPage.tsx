@@ -36,12 +36,12 @@ export function LoginPage() {
       }
       try {
         useAuthStore.getState().setTokens(await authApi.login(parsed.data));
-        toast.success("Signed in");
+        toast.success("Signed in successfully", { description: "Welcome back to NepaEducation." });
         await navigate(from, { replace: true });
         return {};
       } catch (error) {
         const apiError = toApiError(error);
-        if (apiError.issues.length === 0) toast.error("Couldn't sign in", { description: apiError.detail });
+        if (apiError.issues.length === 0) toast.error("Unable to sign in", { description: apiError.detail });
         return { email, error: apiError.detail, fields: apiError.fieldErrors };
       }
     },
