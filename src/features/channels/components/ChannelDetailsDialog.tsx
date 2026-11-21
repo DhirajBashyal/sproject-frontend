@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toApiError } from "@/lib/axios";
+import { toast, toastError } from "@/lib/toast";
 import { channelsApi } from "../api/channels.api";
 import { useChannelActions, useChannelStatus, useStartOAuth } from "../hooks/useChannels";
 import type { Channel } from "../types";
@@ -77,9 +78,19 @@ function WebhookCheckButton({ channel }: { channel: Channel }) {
     enabled: false,
   });
 
+  async function check() {
+    const result = await refetch();
+    if (result.error) return toastError(result.error, "Couldn't check message delivery");
+    const { data: found } = result;
+    if (!found) return;
+    if (found.subscribed) toast.success("Webhook connected", { description: `Receiving: ${found.subscribed_fields.join(", ")}` });
+    else if (found.subscribed === false) toast.warning("Webhook not fully connected", { description: found.detail ?? undefined });
+    else toast.info("Couldn't confirm the webhook", { description: found.detail ?? undefined });
+  }
+
   return (
     <div className="grid gap-2">
-      <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+      <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void check()}>
         {isFetching
           ? "Checking…"
           : channel.platform === "instagram"
