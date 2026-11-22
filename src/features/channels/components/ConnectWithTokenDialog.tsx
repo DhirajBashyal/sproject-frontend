@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useActionState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { env } from "@/config/env";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -17,6 +18,7 @@ interface Field {
   hint?: string;
   secret?: boolean;
   optional?: boolean;
+  defaultValue?: string;
 }
 
 const chatbot: Field = {
@@ -26,13 +28,16 @@ const chatbot: Field = {
   optional: true,
 };
 
+// Facebook and Instagram start with the default chatbot so auto-replies are on unless cleared.
+const defaultChatbot: Field = { ...chatbot, defaultValue: env.defaultChatbotId };
+
 const fields: Record<Platform, Field[]> = {
   facebook: [
     { id: "page_id", label: "Page ID" },
     { id: "access_token", label: "Page access token", secret: true },
-    chatbot,
+    defaultChatbot,
   ],
-  instagram: [{ id: "access_token", label: "Access token", secret: true }, chatbot],
+  instagram: [{ id: "access_token", label: "Access token", secret: true }, defaultChatbot],
   whatsapp: [
     { id: "phone_number_id", label: "Phone number ID" },
     { id: "waba_id", label: "WhatsApp Business Account ID", hint: "Needed to receive messages." },
@@ -92,14 +97,14 @@ export function ConnectWithTokenDialog({ platform, open, onOpenChange }: Connect
         <DialogTitle>Connect {PLATFORM_LABEL[platform]}</DialogTitle>
         <DialogDescription>Enter the details from your Meta account.</DialogDescription>
         <form action={formAction} className="grid gap-4">
-          {fields[platform].map(({ id, label, hint, secret, optional }) => (
+          {fields[platform].map(({ id, label, hint, secret, optional, defaultValue }) => (
             <FormField
               key={id}
               id={id}
               label={label}
               hint={hint}
               error={state.fields?.[id]}
-              defaultValue={state.values?.[id]}
+              defaultValue={state.values ? state.values[id] : defaultValue}
               type={secret ? "password" : "text"}
               autoComplete="off"
               required={!optional}

@@ -87,8 +87,14 @@ export const channelsApi = {
 
   instagramOAuthConfig: () =>
     http.get<{ auth_url: string; state: string }>(`${base("instagram")}/oauth-config`).then((r) => r.data),
-  instagramConnect: (code: string, state: string) =>
-    http.post<Channel>(`${base("instagram")}/connect`, { code, state }).then((r) => r.data),
+  instagramConnect: (code: string, state: string, chatbotId?: string) =>
+    http
+      .post<Channel>(`${base("instagram")}/connect`, {
+        code,
+        state,
+        ...(chatbotId && { chatbot_id: chatbotId }),
+      })
+      .then((r) => r.data),
 
   sendText: (channel: Channel, recipient: string, text: string) => {
     const bodies: Record<Platform, object> = {

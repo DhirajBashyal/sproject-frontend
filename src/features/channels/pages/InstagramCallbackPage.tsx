@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { use } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
+import { env } from "@/config/env";
 import { channelsApi } from "../api/channels.api";
 import { CallbackCard, CallbackFailure, CallbackShell } from "../components/CallbackShell";
 import { upsertChannels } from "../hooks/useChannels";
@@ -15,7 +16,8 @@ function ConnectResult({ code, state }: { code: string; state: string }) {
   const queryClient = useQueryClient();
   let connection = connections.get(state);
   if (!connection) {
-    connection = channelsApi.instagramConnect(code, state).then((channel) => {
+    // Connect with the default chatbot, so auto-replies are on like the Facebook form.
+    connection = channelsApi.instagramConnect(code, state, env.defaultChatbotId || undefined).then((channel) => {
       upsertChannels(queryClient, [channel]);
       toast.success("Instagram account connected successfully", { description: `@${channel.name}` });
       return channel;

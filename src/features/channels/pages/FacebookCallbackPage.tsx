@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { use, useActionState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Alert } from "@/components/ui/alert";
+import { env } from "@/config/env";
 import { FormField } from "@/components/ui/form-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { toApiError } from "@/lib/axios";
@@ -38,10 +39,11 @@ function PagePicker({ code, state }: { code: string; state: string }) {
   const [result, formAction] = useActionState(
     async (_previous: PickerState, form: FormData): Promise<PickerState> => {
       const pageIds = form.getAll("page_id").map(String);
-      const chatbotId = String(form.get("chatbot_id")).trim() || undefined;
+      // Keep "" when cleared, so a failed submit doesn't refill the default chatbot.
+      const chatbotId = String(form.get("chatbot_id") ?? "").trim();
       if (pageIds.length === 0) return { error: "Choose at least one page.", chatbotId };
       try {
-        const connected = await channelsApi.facebookConnectPages(pageIds, chatbotId);
+        const connected = await channelsApi.facebookConnectPages(pageIds, chatbotId || undefined);
         upsertChannels(queryClient, connected);
         toast.success(
           connected.length === 1 ? "Facebook Page connected successfully" : `${connected.length} Facebook Pages connected successfully`,
@@ -89,7 +91,7 @@ function PagePicker({ code, state }: { code: string; state: string }) {
           label="Chatbot ID (optional)"
           hint="Leave empty to connect without auto-replies."
           autoComplete="off"
-          defaultValue={result.chatbotId}
+          defaultValue={result.chatbotId ?? env.defaultChatbotId}
         />
         {result.error && <Alert>{result.error}</Alert>}
         <SubmitButton pendingText="Connecting…">Connect selected pages</SubmitButton>
